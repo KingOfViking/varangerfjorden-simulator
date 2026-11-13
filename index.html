@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Varangerfjorden Simulator 2.0 – Kiberg landskap</title><style>
+<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Varangerfjorden Simulator 2.1 – Kiberg landskap</title><style>
 *{box-sizing:border-box}body{margin:0;overflow:hidden;background:#06121b;color:#eef7fc;font-family:system-ui,Segoe UI,sans-serif}canvas{display:block}#hud{position:absolute;top:16px;left:16px;padding:15px 18px;background:#071521c9;border:1px solid #4e879477;border-radius:12px;min-width:235px;backdrop-filter:blur(8px)}#hud h1{font-size:16px;margin:0 0 8px;color:#9be4e7}#hud p{margin:5px 0;font-size:13px}#hud b{color:#fff}#hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:#071521db;padding:11px 18px;border:1px solid #4e879477;border-radius:12px;font-size:12px;text-align:center;max-width:95vw;line-height:1.7}#right{position:absolute;top:16px;right:16px;display:flex;gap:8px}button{border:1px solid #68b6c4;background:#103847;color:white;padding:10px 13px;border-radius:9px;cursor:pointer;font-weight:600}button:hover{background:#1a5868}#message{position:absolute;top:100px;left:50%;transform:translateX(-50%);background:#0c2836c9;padding:8px 14px;border-radius:9px;pointer-events:none}#fishPanel{position:absolute;top:240px;left:16px;background:#071521df;border:1px solid #4e879477;border-radius:12px;padding:12px 15px;width:235px;font-size:13px}#fishPanel p{margin:6px 0}#tensionOuter{height:9px;background:#233a46;border-radius:5px;overflow:hidden}#tensionBar{height:100%;width:0%;background:#51d6b0;transition:width .12s}#fishBtn{margin-top:8px;width:100%}#touch{display:none;position:absolute;bottom:95px;left:12px;right:12px;justify-content:space-between;pointer-events:none}#touch>div{display:flex;gap:8px}#touch button{pointer-events:auto;min-width:54px;min-height:52px;font-size:19px}@media(pointer:coarse){#touch{display:flex}#hint{font-size:10px;bottom:8px}#hud{top:8px;left:8px;min-width:170px;padding:10px}#right{top:8px;right:8px}#right button{padding:8px;font-size:11px}#fishPanel{top:215px;left:8px;width:185px;padding:9px;font-size:11px}}
 #gearPanel{position:absolute;top:16px;right:16px;width:250px;max-height:calc(100vh - 110px);overflow-y:auto;background:#071521df;border:1px solid #4e879477;border-radius:12px;padding:12px 14px;font-size:12px;backdrop-filter:blur(8px)}#gearPanel p{margin:7px 0}#gearPanel select{width:100%;padding:8px;border-radius:7px;background:#123846;color:white;border:1px solid #68b6c4}#gearPanel button{margin:4px 3px 3px 0;padding:8px;font-size:12px}#gearTip{color:#b8dbe1;line-height:1.4}#sonar{border-top:1px solid #3b6674;margin-top:9px;padding-top:9px}#sonarCanvas{width:100%;height:76px;border-radius:6px;background:#071b30}#right{top:auto;bottom:75px;right:16px}#fishPanel{top:240px}@media(max-width:750px){#gearPanel{top:155px;right:8px;width:170px;max-height:45vh;padding:9px;font-size:11px}#gearPanel button{font-size:10px}#fishPanel{top:230px;width:175px}#right{bottom:70px}#hint{max-width:100%;font-size:10px}}
 
@@ -32,9 +32,9 @@ catch(firstError){try{THREE=await import('https://unpkg.com/three@0.160.1/build/
 catch(secondError){showGameError('Three.js kunne ikke lastes. Sjekk internettforbindelsen eller prøv en annen nettleser.');throw secondError}}
 
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x94b8c7);scene.fog=new THREE.FogExp2(0x94b8c7,0.00062);
-const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.prepend(renderer.domElement);
-const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,10000);const sun=new THREE.DirectionalLight(0xffe7ba,2.2);sun.position.set(-350,500,-200);scene.add(sun);scene.add(new THREE.HemisphereLight(0xcce7fa,0x344c55,2.0));
-const seaGeo=new THREE.PlaneGeometry(7000,7000,170,170);seaGeo.rotateX(-Math.PI/2);const base=seaGeo.attributes.position.array.slice();const sea=new THREE.Mesh(seaGeo,new THREE.MeshStandardMaterial({color:0x124966,metalness:.22,roughness:.24,flatShading:false,side:THREE.DoubleSide}));sea.position.y=-.2;scene.add(sea);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.prepend(renderer.domElement);
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,10000);const sun=new THREE.DirectionalLight(0xfff0d6,2.7);sun.position.set(-350,650,-300);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-750;sun.shadow.camera.right=750;sun.shadow.camera.top=750;sun.shadow.camera.bottom=-750;sun.shadow.normalBias=.025;scene.add(sun);scene.add(new THREE.HemisphereLight(0xc7e7fa,0x384a46,1.25));scene.add(new THREE.AmbientLight(0x93b6cc,.25));
+const seaGeo=new THREE.PlaneGeometry(7000,7000,210,210);seaGeo.rotateX(-Math.PI/2);const base=seaGeo.attributes.position.array.slice();const sea=new THREE.Mesh(seaGeo,new THREE.MeshStandardMaterial({color:0x17617b,metalness:.4,roughness:.29,flatShading:false,side:THREE.DoubleSide}));sea.position.y=-.2;scene.add(sea);
 // V1.4: Helhetlig, stilisert Kiberg havn. Alle objekter bruker samme terrengfunksjon.
 // Lokal koordinatmodell, ikke faktiske sjøkart eller Google Street View-geometri.
 const groundMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
@@ -44,8 +44,8 @@ function groundHeight(x,z){
  if(shore<0)return -15;
  const rise=Math.max(0,shore);
  // Kystlandskap med lave strandterrasser og avrundede åser.
- const rolling=2.5*Math.sin(x*.013+side)+1.5*Math.cos(x*.031+z*.017);
- const texture=1.1*Math.sin(x*.055+z*.041)*Math.cos(z*.044-x*.018);
+ const rolling=5*Math.sin(x*.009+side)+3.5*Math.cos(x*.025+z*.014)+1.6*Math.sin((x+z)*.049);
+ const texture=2.4*Math.sin(x*.055+z*.041)*Math.cos(z*.044-x*.018)+.8*Math.sin(x*.13-z*.11);
  return 1.2+rise*.10+Math.pow(rise/260,1.4)*21+rolling*Math.min(1,rise/60)+texture*Math.min(1,rise/50);
 }
 // Samme terrengfunksjon brukes av bygninger, veier og lys.
@@ -58,14 +58,14 @@ function createCoast(side){
   const y=groundHeight(x,z);
   p.setXYZ(i,x,y,z);
   const shore=Math.abs(z)-Math.abs(coastEdge(x,side));
-  if(shore<16)c.setRGB(.58,.57,.49);
-  else if(shore<70)c.setRGB(.30,.36,.29);
-  else if(shore<210)c.setRGB(.25,.33,.26);
-  else c.setRGB(.31,.36,.32);
+  if(shore<16)c.setRGB(.58,.54,.43);
+  else if(shore<70)c.setRGB(.29,.34,.25);
+  else if(shore<210)c.setRGB(.23,.32,.22);
+  else c.setRGB(.30,.34,.29);const grain=Math.sin(x*.071+z*.11)*Math.cos(z*.067-x*.032)*.045;c.offsetHSL(0,0,grain);
   colors.push(c.r,c.g,c.b);
  }
  geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.computeVertexNormals();
- const mesh=new THREE.Mesh(geo,groundMat);mesh.receiveShadow=true;scene.add(mesh);
+ const mesh=new THREE.Mesh(geo,groundMat);mesh.receiveShadow=true;mesh.castShadow=true;scene.add(mesh);
 }
 createCoast(-1);createCoast(1);
 function box(w,h,d,color,x,y,z,group=scene){
@@ -123,6 +123,13 @@ function house(x,z,i){
 for(let i=0;i<18;i++){
  const col=i%9,row=Math.floor(i/9),x=-520+col*65+(row?15:0),z=245+row*67+Math.sin(i*2.7)*9;
  house(x,z,i);
+}
+// Varierte detaljer på hus og båter, uten tunge eksterne 3D-filer.
+for(let i=0;i<32;i++){
+ const xx=-560+(i*47)%650,zz=195+(i%4)*28;
+ if(groundHeight(xx,zz)<0)continue;
+ const stone=new THREE.Mesh(new THREE.DodecahedronGeometry(1,0),new THREE.MeshStandardMaterial({color:i%3?0x777b71:0x626f68,roughness:1,flatShading:true}));
+ stone.position.set(xx,groundHeight(xx,zz)+.55,zz);stone.scale.set(1.5+(i%3),.8+(i%2)*.5,1.2+(i%4)*.4);stone.rotation.y=i*1.4;stone.castShadow=true;scene.add(stone);
 }
 // Grusveier følger høyden i terrenget og har egne sideveier til husene.
 const roadMat=new THREE.MeshStandardMaterial({color:0x77766a,roughness:1,side:THREE.DoubleSide});
@@ -182,7 +189,18 @@ for(let i=0;i<120;i++){
  rock.position.set(-155+along*4.3,.6,side*134+(i%5-2)*2);rock.scale.set(2+(i%4)*.45,1.2+(i%3)*.3,2.3);rock.rotation.set(.2*i,.5*i,0);scene.add(rock);
 }
 // Boat local bow points toward +Z; rotate hull 180 degrees so the pointed bow faces travel direction.
-const boat=new THREE.Group();scene.add(boat);const hullShape=new THREE.Shape();hullShape.moveTo(-3.4,-8);hullShape.lineTo(3.4,-8);hullShape.lineTo(3.5,2);hullShape.lineTo(2.6,7);hullShape.lineTo(0,11);hullShape.lineTo(-2.6,7);hullShape.lineTo(-3.5,2);hullShape.closePath();const hullGeo=new THREE.ExtrudeGeometry(hullShape,{depth:2.8,bevelEnabled:true,bevelThickness:.5,bevelSize:.4,bevelSegments:2});hullGeo.rotateX(-Math.PI/2);hullGeo.rotateY(Math.PI);const hull=new THREE.Mesh(hullGeo,new THREE.MeshStandardMaterial({color:0x263d49,metalness:.2,roughness:.55}));hull.position.y=2.2;boat.add(hull);box(5.8,.6,14,0xa8a79b,0,3,-.2,boat);box(4.4,3.3,5.8,0xe9e7df,0,5,-1.6,boat);box(4.5,.6,6,0xb34e35,0,7,-1.6,boat);box(2.6,1.3,.15,0x5b9eb3,0,5.7,1.4,boat);box(1.3,2,1.5,0x344650,0,4.4,-7.8,boat);box(.17,7,.17,0x333c41,0,11,-2,boat);let navLight=new THREE.PointLight(0xffe8b0,8,40);navLight.position.set(0,8.4,2);boat.add(navLight);
+const boat=new THREE.Group();scene.add(boat);const hullShape=new THREE.Shape();hullShape.moveTo(-3.4,-8);hullShape.lineTo(3.4,-8);hullShape.lineTo(3.5,2);hullShape.lineTo(2.6,7);hullShape.lineTo(0,11);hullShape.lineTo(-2.6,7);hullShape.lineTo(-3.5,2);hullShape.closePath();const hullGeo=new THREE.ExtrudeGeometry(hullShape,{depth:2.8,bevelEnabled:true,bevelThickness:.5,bevelSize:.4,bevelSegments:2});hullGeo.rotateX(-Math.PI/2);hullGeo.rotateY(Math.PI);const hull=new THREE.Mesh(hullGeo,new THREE.MeshStandardMaterial({color:0x263d49,metalness:.2,roughness:.55}));hull.position.y=2.2;boat.add(hull);box(5.8,.6,14,0xa8a79b,0,3,-.2,boat);box(4.4,3.3,5.8,0xe9e7df,0,5,-1.6,boat);box(4.5,.6,6,0xb34e35,0,7,-1.6,boat);box(2.6,1.3,.15,0x5b9eb3,0,5.7,1.4,boat);box(1.3,2,1.5,0x344650,0,4.4,-7.8,boat);box(.17,7,.17,0x333c41,0,11,-2,boat);// Rekkverk, dekksutstyr og navigasjonslys på spillerens fartøy.
+const railMat=new THREE.MeshStandardMaterial({color:0xb7c5c6,metalness:.7,roughness:.3});
+for(const side of [-1,1]){
+ for(let k=0;k<7;k++){
+ const post=new THREE.Mesh(new THREE.CylinderGeometry(.065,.065,1.25,6),railMat);post.position.set(side*2.95,3.75,-6+k*2.25);boat.add(post);
+ }
+ const rail=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,14),railMat);rail.position.set(side*2.95,4.32,.5);boat.add(rail);
+}
+box(1.3,.65,1.5,0x9b8b65,-1.6,3.7,-5.3,boat);
+box(1.1,.8,1.3,0x6c787d,1.5,3.8,-5.4,boat);
+const bowLamp=new THREE.Mesh(new THREE.SphereGeometry(.18,8,6),new THREE.MeshBasicMaterial({color:0xf3f8e6}));bowLamp.position.set(0,4.3,9);boat.add(bowLamp);
+let navLight=new THREE.PointLight(0xffe8b0,8,40);navLight.position.set(0,8.4,2);boat.add(navLight);
 const wake=[];const wakeMat=new THREE.MeshBasicMaterial({color:0xc9eff4,transparent:true,opacity:.36,depthWrite:false});for(let i=0;i<75;i++){let m=new THREE.Mesh(new THREE.PlaneGeometry(3,1.3),wakeMat.clone());m.rotation.x=-Math.PI/2;m.visible=false;scene.add(m);wake.push(m)}let wakeIndex=0,wakeTimer=0;
 const keys={};addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();keys[e.code]=true;if(e.code==='KeyC'&&!e.repeat)cycleCamera();if(e.code==='KeyR'&&!e.repeat)reset();if(e.code==='KeyF'&&!e.repeat)fishAction()});addEventListener('keyup',e=>keys[e.code]=false);for(const b of document.querySelectorAll('[data-key]')){const k=b.dataset.key;b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;b.setPointerCapture(e.pointerId)});for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>keys[k]=false)}
 let camMode=0,orbitAngle=0,orbitPitch=.32;const camNames=['Bak båten','Førerplass','Oversikt'];function cycleCamera(){camMode=(camMode+1)%3;document.querySelector('#camera').textContent=camNames[camMode]}document.querySelector('#camBtn').onclick=cycleCamera;let dragging=false,lastX=0,lastY=0;renderer.domElement.addEventListener('pointerdown',e=>{if(camMode===2){dragging=true;lastX=e.clientX;lastY=e.clientY}});addEventListener('pointerup',()=>dragging=false);addEventListener('pointermove',e=>{if(dragging){orbitAngle+=(e.clientX-lastX)*.006;orbitPitch=THREE.MathUtils.clamp(orbitPitch+(e.clientY-lastY)*.004,-.1,1.15);lastX=e.clientX;lastY=e.clientY}});
@@ -249,7 +267,7 @@ updateGearUI();
 const clock=new THREE.Clock();const cameraTarget=new THREE.Vector3(),camDesired=new THREE.Vector3();let frame=0;function animate(){requestAnimationFrame(animate);let dt=Math.min(clock.getDelta(),.05);elapsed+=dt;for(let i=0;i<foamStrips.length;i++){const f=foamStrips[i];f.material.opacity=.12+.15*(1+Math.sin(elapsed*.9+i))/2;f.position.y=.12+.09*Math.sin(elapsed*1.2+i)}tickGear(dt);let accelerating=keys.ArrowUp||keys.KeyW,decelerating=keys.ArrowDown||keys.KeyS,left=keys.ArrowLeft||keys.KeyA,right=keys.ArrowRight||keys.KeyD;if(accelerating)throttle=Math.min(1,throttle+dt*.28);if(decelerating)throttle=Math.max(-.35,throttle-dt*.34);let targetRudder=(right?1:0)-(left?1:0);rudder=THREE.MathUtils.damp(rudder,targetRudder,2.8,dt);let desiredSpeed=throttle>=0?throttle*15:throttle*6;speed=THREE.MathUtils.damp(speed,desiredSpeed,throttle===0?.24:.35,dt);yaw+=rudder*speed*.0085*dt;x+=Math.sin(yaw)*speed*dt;z+=Math.cos(yaw)*speed*dt;
 // Simple safety boundary around the playable water.
 x=THREE.MathUtils.clamp(x,-2700,2700);z=THREE.MathUtils.clamp(z,-2700,2700);boat.position.set(x,Math.sin(elapsed*1.4+x*.008)*.28+.05,z);boat.rotation.set(Math.sin(elapsed*1.15)*.025, yaw,Math.sin(elapsed*1.6)*.037-rudder*.018);
-let p=seaGeo.attributes.position;for(let i=0;i<p.count;i++){let vx=base[i*3],vz=base[i*3+2];p.setY(i,Math.sin(vx*.017+elapsed*1.2)*.48+Math.cos(vz*.023+elapsed*.9)*.34+Math.sin((vx+vz)*.038+elapsed*1.7)*.13)}p.needsUpdate=true;if(frame++%3===0)seaGeo.computeVertexNormals();
+let p=seaGeo.attributes.position;for(let i=0;i<p.count;i++){let vx=base[i*3],vz=base[i*3+2];p.setY(i,Math.sin(vx*.017+elapsed*1.2)*.36+Math.cos(vz*.023+elapsed*.9)*.25+Math.sin((vx+vz)*.038+elapsed*1.7)*.12+Math.sin(vx*.095-vz*.045+elapsed*2.2)*.07)}p.needsUpdate=true;if(frame++%3===0)seaGeo.computeVertexNormals();
 wakeTimer+=dt;if(Math.abs(speed)>1.5&&wakeTimer>.12){wakeTimer=0;let w=wake[wakeIndex++%wake.length];w.visible=true;w.position.set(x-Math.sin(yaw)*10,.14,z-Math.cos(yaw)*10);w.rotation.z=-yaw;w.userData.birth=elapsed;w.material.opacity=.5}for(let w of wake){if(!w.visible)continue;let age=elapsed-w.userData.birth;if(age>9){w.visible=false;continue}w.scale.set(1+age*.8,1+age*.9,1);w.material.opacity=Math.max(0,.5-age*.055)}
 if(fishState==='waiting'||fishState==='hooked'){
  if(Math.abs(speed)*1.94384>5){finishFish(false)}else if(fishState==='waiting'){fishTimer-=dt;if(fishTimer<=0){fishTension=18;fishProgress=0;setFishState('hooked','NAPP! Hold MELLOMROM for å sveive. Slipp når spenningen er høy.')}}
