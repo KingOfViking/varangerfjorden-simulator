@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Varangerfjorden Simulator 0.5 – Kiberg fiskeri og ekkolodd</title><style>
+<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Varangerfjorden Simulator 0.6 – forbedret kystlandskap</title><style>
 *{box-sizing:border-box}body{margin:0;overflow:hidden;background:#06121b;color:#eef7fc;font-family:system-ui,Segoe UI,sans-serif}canvas{display:block}#hud{position:absolute;top:16px;left:16px;padding:15px 18px;background:#071521c9;border:1px solid #4e879477;border-radius:12px;min-width:235px;backdrop-filter:blur(8px)}#hud h1{font-size:16px;margin:0 0 8px;color:#9be4e7}#hud p{margin:5px 0;font-size:13px}#hud b{color:#fff}#hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:#071521db;padding:11px 18px;border:1px solid #4e879477;border-radius:12px;font-size:12px;text-align:center;max-width:95vw;line-height:1.7}#right{position:absolute;top:16px;right:16px;display:flex;gap:8px}button{border:1px solid #68b6c4;background:#103847;color:white;padding:10px 13px;border-radius:9px;cursor:pointer;font-weight:600}button:hover{background:#1a5868}#message{position:absolute;top:100px;left:50%;transform:translateX(-50%);background:#0c2836c9;padding:8px 14px;border-radius:9px;pointer-events:none}#fishPanel{position:absolute;top:240px;left:16px;background:#071521df;border:1px solid #4e879477;border-radius:12px;padding:12px 15px;width:235px;font-size:13px}#fishPanel p{margin:6px 0}#tensionOuter{height:9px;background:#233a46;border-radius:5px;overflow:hidden}#tensionBar{height:100%;width:0%;background:#51d6b0;transition:width .12s}#fishBtn{margin-top:8px;width:100%}#touch{display:none;position:absolute;bottom:95px;left:12px;right:12px;justify-content:space-between;pointer-events:none}#touch>div{display:flex;gap:8px}#touch button{pointer-events:auto;min-width:54px;min-height:52px;font-size:19px}@media(pointer:coarse){#touch{display:flex}#hint{font-size:10px;bottom:8px}#hud{top:8px;left:8px;min-width:170px;padding:10px}#right{top:8px;right:8px}#right button{padding:8px;font-size:11px}#fishPanel{top:215px;left:8px;width:185px;padding:9px;font-size:11px}}
 #gearPanel{position:absolute;top:16px;right:16px;width:250px;max-height:calc(100vh - 110px);overflow-y:auto;background:#071521df;border:1px solid #4e879477;border-radius:12px;padding:12px 14px;font-size:12px;backdrop-filter:blur(8px)}#gearPanel p{margin:7px 0}#gearPanel select{width:100%;padding:8px;border-radius:7px;background:#123846;color:white;border:1px solid #68b6c4}#gearPanel button{margin:4px 3px 3px 0;padding:8px;font-size:12px}#gearTip{color:#b8dbe1;line-height:1.4}#sonar{border-top:1px solid #3b6674;margin-top:9px;padding-top:9px}#sonarCanvas{width:100%;height:76px;border-radius:6px;background:#071b30}#right{top:auto;bottom:75px;right:16px}#fishPanel{top:240px}@media(max-width:750px){#gearPanel{top:155px;right:8px;width:170px;max-height:45vh;padding:9px;font-size:11px}#gearPanel button{font-size:10px}#fishPanel{top:230px;width:175px}#right{bottom:70px}#hint{max-width:100%;font-size:10px}}
 
@@ -13,13 +13,54 @@ const scene=new THREE.Scene();scene.background=new THREE.Color(0x8bb2c6);scene.f
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.prepend(renderer.domElement);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,10000);const sun=new THREE.DirectionalLight(0xffe7ba,2.2);sun.position.set(-350,500,-200);scene.add(sun);scene.add(new THREE.HemisphereLight(0xcce7fa,0x344c55,2.0));
 const seaGeo=new THREE.PlaneGeometry(7000,7000,110,110);seaGeo.rotateX(-Math.PI/2);const base=seaGeo.attributes.position.array.slice();const sea=new THREE.Mesh(seaGeo,new THREE.MeshStandardMaterial({color:0x17607c,metalness:.32,roughness:.33,flatShading:true,transparent:true,opacity:.98,side:THREE.DoubleSide}));sea.position.y=-.2;scene.add(sea);
-const landMat=new THREE.MeshStandardMaterial({color:0x687d65,roughness:1,flatShading:true});const rockMat=new THREE.MeshStandardMaterial({color:0x697277,roughness:1,flatShading:true});const grass=new THREE.MeshStandardMaterial({color:0x62775b,roughness:1});
-function island(cx,cz,rx,rz,height,seed){const geo=new THREE.PlaneGeometry(rx*2,rz*2,52,32);geo.rotateX(-Math.PI/2);const p=geo.attributes.position;for(let i=0;i<p.count;i++){let x=p.getX(i)/rx,z=p.getZ(i)/rz;let edge=Math.max(0,1-x*x-z*z);let ripple=Math.sin(x*12+seed)*.15+Math.cos(z*15+seed)*.13+Math.sin(x*23+z*16)*.06;p.setY(i,-2+Math.pow(edge,1.8)*height*(.88+ripple));}geo.computeVertexNormals();let m=new THREE.Mesh(geo,landMat);m.position.set(cx,0,cz);scene.add(m);return m}
-island(-690,-310,1000,620,140,2);island(1300,850,1200,600,210,5);island(-1400,1250,800,750,170,9);island(1850,-1600,900,1000,280,4);
+// V0.6: Nordnorsk, prosedyregenerert kystterreng (ikke navigasjonsdata).
+const landMat=new THREE.MeshStandardMaterial({color:0x7c8377,roughness:1,vertexColors:true,side:THREE.DoubleSide});
+const rockMat=new THREE.MeshStandardMaterial({color:0x697277,roughness:1,flatShading:true});
+const grass=new THREE.MeshStandardMaterial({color:0x62775b,roughness:1});
+function terrainNoise(x,z,seed){return Math.sin(x*.011+seed)*Math.cos(z*.013-seed)*.52+Math.sin(x*.027+z*.014+seed*2)*.24+Math.cos(z*.042-x*.022+seed)*.12+Math.sin(x*.095+z*.078)*.045;}
+function island(cx,cz,rx,rz,height,seed){
+ const geo=new THREE.PlaneGeometry(rx*2,rz*2,124,86);geo.rotateX(-Math.PI/2);
+ const p=geo.attributes.position,colors=[],c=new THREE.Color();
+ for(let i=0;i<p.count;i++){
+  const lx=p.getX(i),lz=p.getZ(i),nx=lx/rx,nz=lz/rz;
+  const angle=Math.atan2(nz,nx),dist=Math.hypot(nx,nz);
+  const coast=1+.075*Math.sin(angle*7+seed)+.045*Math.cos(angle*13-seed)+.035*Math.sin(angle*23+seed*3);
+  const inland=THREE.MathUtils.clamp((coast-dist)/.58,0,1);
+  const ridge=Math.pow(inland,1.45);
+  const noise=terrainNoise(lx+cx,lz+cz,seed);
+  const elevation=-5+ridge*height*(.75+.3*noise)+Math.pow(inland,2)*height*.14*Math.sin(nx*9+nz*5+seed);
+  p.setY(i,elevation);
+  const n=Math.sin((lx+cx)*.083+(lz+cz)*.059)*Math.cos((lx+cx)*.049-(lz+cz)*.071);
+  if(elevation<4)c.setRGB(.43,.43,.40);
+  else if(elevation<22)c.setRGB(.40,.43,.40);
+  else if(elevation<height*.46)c.setRGB(.34+n*.025,.39+n*.025,.35+n*.018);
+  else if(elevation<height*.76)c.setRGB(.42+n*.035,.43+n*.03,.42+n*.03);
+  else c.setRGB(.52+n*.04,.52+n*.04,.50+n*.04);
+  colors.push(c.r,c.g,c.b);
+ }
+ geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.computeVertexNormals();
+ const mesh=new THREE.Mesh(geo,landMat);mesh.position.set(cx,0,cz);mesh.receiveShadow=true;scene.add(mesh);return mesh;
+}
+// Bredere åser og berg rundt den stiliserte Kiberg-kysten.
+island(-770,-350,1170,730,185,2);
+island(1380,900,1310,700,255,5);
+island(-1480,1340,920,790,210,9);
+island(1920,-1670,1050,1100,330,4);
+// Enkel steinstrand og spredte steinblokker langs havneområdet.
+const stoneMaterials=[0x626b6a,0x747773,0x8a8a80,0x535f62].map(color=>new THREE.MeshStandardMaterial({color,roughness:1}));
+const pebbleGeo=new THREE.DodecahedronGeometry(1,0);
+for(let i=0;i<115;i++){
+ const t=i*2.399963,rad=18+Math.sqrt(i/115)*190;
+ const px=-410+Math.cos(t)*rad,pz=-205+Math.sin(t)*rad*.62;
+ const scale=1.2+(i%11)*.34;
+ const stone=new THREE.Mesh(pebbleGeo,stoneMaterials[i%stoneMaterials.length]);
+ stone.position.set(px,2.5+scale*.25,pz);stone.scale.set(scale*1.3,scale*.5,scale);
+ stone.rotation.set(.1*i,.37*i,.06*i);stone.castShadow=i%5===0;scene.add(stone);
+}
 function box(w,h,d,color,x,y,z,group=scene){let m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color,roughness:.8}));m.position.set(x,y,z);group.add(m);return m}
 // Stylized Kiberg waterfront and pier on the nearby coast.
 const pier=box(18,2,145,0x5e4b38,-300,1,-65);for(let i=0;i<8;i++){let z=-127+i*18;box(2,9,2,0x43372d,-307,-3,z);box(2,9,2,0x43372d,-293,-3,z)}
-for(let i=0;i<22;i++){let x=-490+(i%8)*38,z=-220+Math.floor(i/8)*35;box(15,9,13,i%3===0?0xb54f41:i%3===1?0xe0d6bd:0x647d8d,x,8,z);let roof=new THREE.Mesh(new THREE.ConeGeometry(13,7,4),new THREE.MeshStandardMaterial({color:0x45494b}));roof.rotation.y=Math.PI/4;roof.position.set(x,16,z);scene.add(roof)}
+for(let i=0;i<22;i++){let x=-490+(i%8)*38,z=-220+Math.floor(i/8)*35;box(15,9,13,i%3===0?0xb54f41:i%3===1?0xe0d6bd:0x647d8d,x,8,z);let roof=new THREE.Mesh(new THREE.ConeGeometry(12,6,4),new THREE.MeshStandardMaterial({color:0x353b3d,roughness:.93}));roof.rotation.y=Math.PI/4;roof.position.set(x,16,z);roof.castShadow=true;scene.add(roof);if(i%3===0){box(3,3,.35,0xb3c9ce,x-3,10,z+6.7);box(3,3,.35,0xb3c9ce,x+3,10,z+6.7)}if(i%4===0){box(3,2,4,0x656b6d,x+8,3,z-4)}}
 const beacon=new THREE.Group();scene.add(beacon);beacon.position.set(-270,0,-142);box(4,15,4,0xe8e8df,0,8,0,beacon);box(6,3,6,0xd44c3f,0,16,0,beacon);let beaconLight=new THREE.PointLight(0xfff4c0,14,90);beaconLight.position.set(0,20,0);beacon.add(beaconLight);
 // Boat local bow points toward +Z; rotate hull 180 degrees so the pointed bow faces travel direction.
 const boat=new THREE.Group();scene.add(boat);const hullShape=new THREE.Shape();hullShape.moveTo(-3.4,-8);hullShape.lineTo(3.4,-8);hullShape.lineTo(3.5,2);hullShape.lineTo(2.6,7);hullShape.lineTo(0,11);hullShape.lineTo(-2.6,7);hullShape.lineTo(-3.5,2);hullShape.closePath();const hullGeo=new THREE.ExtrudeGeometry(hullShape,{depth:2.8,bevelEnabled:true,bevelThickness:.5,bevelSize:.4,bevelSegments:2});hullGeo.rotateX(-Math.PI/2);hullGeo.rotateY(Math.PI);const hull=new THREE.Mesh(hullGeo,new THREE.MeshStandardMaterial({color:0x263d49,metalness:.2,roughness:.55}));hull.position.y=2.2;boat.add(hull);box(5.8,.6,14,0xa8a79b,0,3,-.2,boat);box(4.4,3.3,5.8,0xe9e7df,0,5,-1.6,boat);box(4.5,.6,6,0xb34e35,0,7,-1.6,boat);box(2.6,1.3,.15,0x5b9eb3,0,5.7,1.4,boat);box(1.3,2,1.5,0x344650,0,4.4,-7.8,boat);box(.17,7,.17,0x333c41,0,11,-2,boat);let navLight=new THREE.PointLight(0xffe8b0,8,40);navLight.position.set(0,8.4,2);boat.add(navLight);
