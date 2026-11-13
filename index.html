@@ -133,6 +133,20 @@ for(let i=0;i<18;i++){
  const col=i%9,row=Math.floor(i/9),x=-520+col*65+(row?15:0),z=245+row*67+Math.sin(i*2.7)*9;
  house(x,z,i);
 }
+// Fiskerihavn: naust, redskapsbygg og kaidetaljer. Omtrentlig plassering.
+function harborShed(px,pz,w,d,h,wall,roofColor){
+ const g=new THREE.Group();g.position.set(px,groundHeight(px,pz),pz);scene.add(g);
+ box(w,h,d,wall,0,h/2,0,g);
+ const roof=new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*.76,4,4),new THREE.MeshStandardMaterial({color:roofColor,roughness:.9}));roof.rotation.y=Math.PI/4;roof.position.y=h+1.4;roof.scale.z=d/w;roof.castShadow=true;g.add(roof);
+ box(w*.35,h*.62,.25,0x444e4f,0,h*.31,d/2+.18,g);
+}
+harborShed(-500,195,24,18,12,0x9a342e,0x343b3d);
+harborShed(-455,207,31,23,13,0x9b9d91,0x343b3d);
+harborShed(-390,216,22,18,11,0xc4c6b8,0x484b4c);
+for(let i=0;i<7;i++){
+ box(3.5,2.4,2.8,i%2?0x52696e:0x9a784e,-365,3,-125+i*12);
+ const bollard=new THREE.Mesh(new THREE.CylinderGeometry(.7,.8,2,10),new THREE.MeshStandardMaterial({color:0x303b40,metalness:.4,roughness:.65}));bollard.position.set(-337,3.7,-125+i*12);scene.add(bollard);
+}
 // Varierte detaljer på hus og båter, uten tunge eksterne 3D-filer.
 for(let i=0;i<32;i++){
  const xx=-560+(i*47)%650,zz=195+(i%4)*28;
@@ -196,8 +210,8 @@ function dockedBoat(bx,bz,color,heading){
  box(.18,9,.18,0x646d70,0,12,-4,g);
  const antenna=new THREE.Mesh(new THREE.CylinderGeometry(.07,.08,4,6),new THREE.MeshStandardMaterial({color:0xc9d0d0}));antenna.position.set(0,18,-4);g.add(antenna);
 }
-dockedBoat(-375,-106,0xb64b3c,.25);
-dockedBoat(-400,-113,0x305e7b,.15);
+dockedBoat(-325,-111,0xb64b3c,.25);
+dockedBoat(-325,-89,0x305e7b,.15);
 // Steinfyllingene er nå integrert i de buede moloene.
 // Enkel indre flytekai parallelt med nordre molo (plassering er foreløpig omtrentlig).
 const floatDock=new THREE.Group();floatDock.position.set(-305,.95,-130);floatDock.rotation.y=-.14;scene.add(floatDock);
