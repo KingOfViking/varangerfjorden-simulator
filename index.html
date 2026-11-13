@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Varangerfjorden Simulator 1.8 – Kiberg kartreferanse</title><style>
+<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Varangerfjorden Simulator 1.9 – forbedret 3D-grafikk</title><style>
 *{box-sizing:border-box}body{margin:0;overflow:hidden;background:#06121b;color:#eef7fc;font-family:system-ui,Segoe UI,sans-serif}canvas{display:block}#hud{position:absolute;top:16px;left:16px;padding:15px 18px;background:#071521c9;border:1px solid #4e879477;border-radius:12px;min-width:235px;backdrop-filter:blur(8px)}#hud h1{font-size:16px;margin:0 0 8px;color:#9be4e7}#hud p{margin:5px 0;font-size:13px}#hud b{color:#fff}#hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:#071521db;padding:11px 18px;border:1px solid #4e879477;border-radius:12px;font-size:12px;text-align:center;max-width:95vw;line-height:1.7}#right{position:absolute;top:16px;right:16px;display:flex;gap:8px}button{border:1px solid #68b6c4;background:#103847;color:white;padding:10px 13px;border-radius:9px;cursor:pointer;font-weight:600}button:hover{background:#1a5868}#message{position:absolute;top:100px;left:50%;transform:translateX(-50%);background:#0c2836c9;padding:8px 14px;border-radius:9px;pointer-events:none}#fishPanel{position:absolute;top:240px;left:16px;background:#071521df;border:1px solid #4e879477;border-radius:12px;padding:12px 15px;width:235px;font-size:13px}#fishPanel p{margin:6px 0}#tensionOuter{height:9px;background:#233a46;border-radius:5px;overflow:hidden}#tensionBar{height:100%;width:0%;background:#51d6b0;transition:width .12s}#fishBtn{margin-top:8px;width:100%}#touch{display:none;position:absolute;bottom:95px;left:12px;right:12px;justify-content:space-between;pointer-events:none}#touch>div{display:flex;gap:8px}#touch button{pointer-events:auto;min-width:54px;min-height:52px;font-size:19px}@media(pointer:coarse){#touch{display:flex}#hint{font-size:10px;bottom:8px}#hud{top:8px;left:8px;min-width:170px;padding:10px}#right{top:8px;right:8px}#right button{padding:8px;font-size:11px}#fishPanel{top:215px;left:8px;width:185px;padding:9px;font-size:11px}}
 #gearPanel{position:absolute;top:16px;right:16px;width:250px;max-height:calc(100vh - 110px);overflow-y:auto;background:#071521df;border:1px solid #4e879477;border-radius:12px;padding:12px 14px;font-size:12px;backdrop-filter:blur(8px)}#gearPanel p{margin:7px 0}#gearPanel select{width:100%;padding:8px;border-radius:7px;background:#123846;color:white;border:1px solid #68b6c4}#gearPanel button{margin:4px 3px 3px 0;padding:8px;font-size:12px}#gearTip{color:#b8dbe1;line-height:1.4}#sonar{border-top:1px solid #3b6674;margin-top:9px;padding-top:9px}#sonarCanvas{width:100%;height:76px;border-radius:6px;background:#071b30}#right{top:auto;bottom:75px;right:16px}#fishPanel{top:240px}@media(max-width:750px){#gearPanel{top:155px;right:8px;width:170px;max-height:45vh;padding:9px;font-size:11px}#gearPanel button{font-size:10px}#fishPanel{top:230px;width:175px}#right{bottom:70px}#hint{max-width:100%;font-size:10px}}
 
@@ -31,10 +31,10 @@ try{THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 catch(firstError){try{THREE=await import('https://unpkg.com/three@0.160.1/build/three.module.js')}
 catch(secondError){showGameError('Three.js kunne ikke lastes. Sjekk internettforbindelsen eller prøv en annen nettleser.');throw secondError}}
 
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x8bb2c6);scene.fog=new THREE.FogExp2(0x8bb2c6,0.00105);
-const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.prepend(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x94b8c7);scene.fog=new THREE.FogExp2(0x94b8c7,0.00062);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.prepend(renderer.domElement);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,10000);const sun=new THREE.DirectionalLight(0xffe7ba,2.2);sun.position.set(-350,500,-200);scene.add(sun);scene.add(new THREE.HemisphereLight(0xcce7fa,0x344c55,2.0));
-const seaGeo=new THREE.PlaneGeometry(7000,7000,110,110);seaGeo.rotateX(-Math.PI/2);const base=seaGeo.attributes.position.array.slice();const sea=new THREE.Mesh(seaGeo,new THREE.MeshStandardMaterial({color:0x17607c,metalness:.32,roughness:.33,flatShading:true,transparent:true,opacity:.98,side:THREE.DoubleSide}));sea.position.y=-.2;scene.add(sea);
+const seaGeo=new THREE.PlaneGeometry(7000,7000,170,170);seaGeo.rotateX(-Math.PI/2);const base=seaGeo.attributes.position.array.slice();const sea=new THREE.Mesh(seaGeo,new THREE.MeshStandardMaterial({color:0x124966,metalness:.22,roughness:.24,flatShading:false,side:THREE.DoubleSide}));sea.position.y=-.2;scene.add(sea);
 // V1.4: Helhetlig, stilisert Kiberg havn. Alle objekter bruker samme terrengfunksjon.
 // Lokal koordinatmodell, ikke faktiske sjøkart eller Google Street View-geometri.
 const groundMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
@@ -131,6 +131,33 @@ for(let i=0;i<110;i++){
  if(y<1)continue;
  const rock=new THREE.Mesh(pebble,moleRock);rock.position.set(px,y+.5,pz);rock.scale.set(1+(i%4)*.2,.45,1);scene.add(rock);
 }
+// V1.9: Lettvekts 3D-detaljer inspirert av konseptbildet; ingen kopierte satellittbilder.
+const foamMat=new THREE.MeshBasicMaterial({color:0xc6e9e9,transparent:true,opacity:.36,depthWrite:false,side:THREE.DoubleSide});
+const foamStrips=[];
+for(let i=0;i<48;i++){
+ const mesh=new THREE.Mesh(new THREE.PlaneGeometry(8+(i%7)*4,.35+(i%3)*.25),foamMat.clone());
+ mesh.rotation.x=-Math.PI/2;mesh.position.set(-680+(i*113)%1350,.15,-450+(i*71)%900);scene.add(mesh);foamStrips.push(mesh);
+}
+// Stilisert fiskefartøy ved kaia, med overbygg, dekk og mast.
+function dockedBoat(bx,bz,color,heading){
+ const g=new THREE.Group();g.position.set(bx,.3,bz);g.rotation.y=heading;scene.add(g);
+ const hullShape=new THREE.Shape();hullShape.moveTo(-3,-9);hullShape.lineTo(3,-9);hullShape.lineTo(3.4,3);hullShape.lineTo(0,11);hullShape.lineTo(-3.4,3);hullShape.closePath();
+ const hullGeo=new THREE.ExtrudeGeometry(hullShape,{depth:3,bevelEnabled:true,bevelSize:.35,bevelThickness:.35,bevelSegments:1});hullGeo.rotateX(-Math.PI/2);
+ const hull=new THREE.Mesh(hullGeo,new THREE.MeshStandardMaterial({color,roughness:.55}));hull.position.y=2.5;g.add(hull);
+ box(5.5,.5,13,0xb9b8ad,0,3.5,-1,g);box(4.6,4.2,5,0xe2e6e1,0,6,-2.7,g);
+ box(4.8,.55,5.5,0x45545b,0,8.4,-2.7,g);box(4.7,1.4,.12,0x86bdca,0,6.7,.02,g);
+ box(.18,9,.18,0x646d70,0,12,-4,g);
+ const antenna=new THREE.Mesh(new THREE.CylinderGeometry(.07,.08,4,6),new THREE.MeshStandardMaterial({color:0xc9d0d0}));antenna.position.set(0,18,-4);g.add(antenna);
+}
+dockedBoat(-375,-106,0xb64b3c,.25);
+dockedBoat(-400,-113,0x305e7b,.15);
+// Fjellblokker langs moloenes ytre sider, plassert ved vannlinjen.
+const harborRockGeo=new THREE.DodecahedronGeometry(1,0);
+for(let i=0;i<120;i++){
+ const side=i%2?-1:1,along=i%60;
+ const rock=new THREE.Mesh(harborRockGeo,new THREE.MeshStandardMaterial({color:i%3===0?0x707b7c:0x858883,roughness:1,flatShading:true}));
+ rock.position.set(-155+along*4.3,.6,side*134+(i%5-2)*2);rock.scale.set(2+(i%4)*.45,1.2+(i%3)*.3,2.3);rock.rotation.set(.2*i,.5*i,0);scene.add(rock);
+}
 // Boat local bow points toward +Z; rotate hull 180 degrees so the pointed bow faces travel direction.
 const boat=new THREE.Group();scene.add(boat);const hullShape=new THREE.Shape();hullShape.moveTo(-3.4,-8);hullShape.lineTo(3.4,-8);hullShape.lineTo(3.5,2);hullShape.lineTo(2.6,7);hullShape.lineTo(0,11);hullShape.lineTo(-2.6,7);hullShape.lineTo(-3.5,2);hullShape.closePath();const hullGeo=new THREE.ExtrudeGeometry(hullShape,{depth:2.8,bevelEnabled:true,bevelThickness:.5,bevelSize:.4,bevelSegments:2});hullGeo.rotateX(-Math.PI/2);hullGeo.rotateY(Math.PI);const hull=new THREE.Mesh(hullGeo,new THREE.MeshStandardMaterial({color:0x263d49,metalness:.2,roughness:.55}));hull.position.y=2.2;boat.add(hull);box(5.8,.6,14,0xa8a79b,0,3,-.2,boat);box(4.4,3.3,5.8,0xe9e7df,0,5,-1.6,boat);box(4.5,.6,6,0xb34e35,0,7,-1.6,boat);box(2.6,1.3,.15,0x5b9eb3,0,5.7,1.4,boat);box(1.3,2,1.5,0x344650,0,4.4,-7.8,boat);box(.17,7,.17,0x333c41,0,11,-2,boat);let navLight=new THREE.PointLight(0xffe8b0,8,40);navLight.position.set(0,8.4,2);boat.add(navLight);
 const wake=[];const wakeMat=new THREE.MeshBasicMaterial({color:0xc9eff4,transparent:true,opacity:.36,depthWrite:false});for(let i=0;i<75;i++){let m=new THREE.Mesh(new THREE.PlaneGeometry(3,1.3),wakeMat.clone());m.rotation.x=-Math.PI/2;m.visible=false;scene.add(m);wake.push(m)}let wakeIndex=0,wakeTimer=0;
@@ -196,7 +223,7 @@ if(sonarTick++%6===0){
 if(sonarTick%12===0)updateGearUI();}
 updateGearUI();
 
-const clock=new THREE.Clock();const cameraTarget=new THREE.Vector3(),camDesired=new THREE.Vector3();let frame=0;function animate(){requestAnimationFrame(animate);let dt=Math.min(clock.getDelta(),.05);elapsed+=dt;tickGear(dt);let accelerating=keys.ArrowUp||keys.KeyW,decelerating=keys.ArrowDown||keys.KeyS,left=keys.ArrowLeft||keys.KeyA,right=keys.ArrowRight||keys.KeyD;if(accelerating)throttle=Math.min(1,throttle+dt*.28);if(decelerating)throttle=Math.max(-.35,throttle-dt*.34);let targetRudder=(right?1:0)-(left?1:0);rudder=THREE.MathUtils.damp(rudder,targetRudder,2.8,dt);let desiredSpeed=throttle>=0?throttle*15:throttle*6;speed=THREE.MathUtils.damp(speed,desiredSpeed,throttle===0?.24:.35,dt);yaw+=rudder*speed*.0085*dt;x+=Math.sin(yaw)*speed*dt;z+=Math.cos(yaw)*speed*dt;
+const clock=new THREE.Clock();const cameraTarget=new THREE.Vector3(),camDesired=new THREE.Vector3();let frame=0;function animate(){requestAnimationFrame(animate);let dt=Math.min(clock.getDelta(),.05);elapsed+=dt;for(let i=0;i<foamStrips.length;i++){const f=foamStrips[i];f.material.opacity=.12+.15*(1+Math.sin(elapsed*.9+i))/2;f.position.y=.12+.09*Math.sin(elapsed*1.2+i)}tickGear(dt);let accelerating=keys.ArrowUp||keys.KeyW,decelerating=keys.ArrowDown||keys.KeyS,left=keys.ArrowLeft||keys.KeyA,right=keys.ArrowRight||keys.KeyD;if(accelerating)throttle=Math.min(1,throttle+dt*.28);if(decelerating)throttle=Math.max(-.35,throttle-dt*.34);let targetRudder=(right?1:0)-(left?1:0);rudder=THREE.MathUtils.damp(rudder,targetRudder,2.8,dt);let desiredSpeed=throttle>=0?throttle*15:throttle*6;speed=THREE.MathUtils.damp(speed,desiredSpeed,throttle===0?.24:.35,dt);yaw+=rudder*speed*.0085*dt;x+=Math.sin(yaw)*speed*dt;z+=Math.cos(yaw)*speed*dt;
 // Simple safety boundary around the playable water.
 x=THREE.MathUtils.clamp(x,-2700,2700);z=THREE.MathUtils.clamp(z,-2700,2700);boat.position.set(x,Math.sin(elapsed*1.4+x*.008)*.28+.05,z);boat.rotation.set(Math.sin(elapsed*1.15)*.025, yaw,Math.sin(elapsed*1.6)*.037-rudder*.018);
 let p=seaGeo.attributes.position;for(let i=0;i<p.count;i++){let vx=base[i*3],vz=base[i*3+2];p.setY(i,Math.sin(vx*.017+elapsed*1.2)*.48+Math.cos(vz*.023+elapsed*.9)*.34+Math.sin((vx+vz)*.038+elapsed*1.7)*.13)}p.needsUpdate=true;if(frame++%3===0)seaGeo.computeVertexNormals();
