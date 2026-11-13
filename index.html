@@ -198,13 +198,11 @@ function dockedBoat(bx,bz,color,heading){
 }
 dockedBoat(-375,-106,0xb64b3c,.25);
 dockedBoat(-400,-113,0x305e7b,.15);
-// Fjellblokker langs moloenes ytre sider, plassert ved vannlinjen.
-const harborRockGeo=new THREE.DodecahedronGeometry(1,0);
-for(let i=0;i<120;i++){
- const side=i%2?-1:1,along=i%60;
- const rock=new THREE.Mesh(harborRockGeo,new THREE.MeshStandardMaterial({color:i%3===0?0x707b7c:0x858883,roughness:1,flatShading:true}));
- rock.position.set(-155+along*4.3,.6,side*134+(i%5-2)*2);rock.scale.set(2+(i%4)*.45,1.2+(i%3)*.3,2.3);rock.rotation.set(.2*i,.5*i,0);scene.add(rock);
-}
+// Steinfyllingene er nå integrert i de buede moloene.
+// Enkel indre flytekai parallelt med nordre molo (plassering er foreløpig omtrentlig).
+const floatDock=new THREE.Group();floatDock.position.set(-305,.95,-130);floatDock.rotation.y=-.14;scene.add(floatDock);
+const dockDeck=new THREE.Mesh(new THREE.BoxGeometry(8,1.2,92),new THREE.MeshStandardMaterial({color:0x777c78,roughness:.85}));dockDeck.castShadow=true;dockDeck.receiveShadow=true;floatDock.add(dockDeck);
+for(let i=0;i<12;i++){const plank=new THREE.Mesh(new THREE.BoxGeometry(8.4,.13,.3),new THREE.MeshStandardMaterial({color:0x9b9b90,roughness:.95}));plank.position.set(0,.7,-43+i*8);floatDock.add(plank)}
 // Boat local bow points toward +Z; rotate hull 180 degrees so the pointed bow faces travel direction.
 const boat=new THREE.Group();scene.add(boat);const hullShape=new THREE.Shape();hullShape.moveTo(-3.4,-8);hullShape.lineTo(3.4,-8);hullShape.lineTo(3.5,2);hullShape.lineTo(2.6,7);hullShape.lineTo(0,11);hullShape.lineTo(-2.6,7);hullShape.lineTo(-3.5,2);hullShape.closePath();const hullGeo=new THREE.ExtrudeGeometry(hullShape,{depth:2.8,bevelEnabled:true,bevelThickness:.5,bevelSize:.4,bevelSegments:2});hullGeo.rotateX(-Math.PI/2);hullGeo.rotateY(Math.PI);const hull=new THREE.Mesh(hullGeo,new THREE.MeshStandardMaterial({color:0x263d49,metalness:.2,roughness:.55}));hull.position.y=2.2;boat.add(hull);box(5.8,.6,14,0xa8a79b,0,3,-.2,boat);box(4.4,3.3,5.8,0xe9e7df,0,5,-1.6,boat);box(4.5,.6,6,0xb34e35,0,7,-1.6,boat);box(2.6,1.3,.15,0x5b9eb3,0,5.7,1.4,boat);box(1.3,2,1.5,0x344650,0,4.4,-7.8,boat);box(.17,7,.17,0x333c41,0,11,-2,boat);// Rekkverk, dekksutstyr og navigasjonslys på spillerens fartøy.
 const railMat=new THREE.MeshStandardMaterial({color:0xb7c5c6,metalness:.7,roughness:.3});
