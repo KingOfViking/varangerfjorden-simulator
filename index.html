@@ -31,15 +31,26 @@ const seaGeo=new THREE.PlaneGeometry(7000,7000,110,110);seaGeo.rotateX(-Math.PI/
 // Lokal koordinatmodell, ikke faktiske sjøkart eller Google Street View-geometri.
 const groundMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
 function coastEdge(x,side){return side*(153+13*Math.sin(x*.009)+7*Math.sin(x*.025));}
-function groundHeight(x,z){
+function naturalGroundHeight(x,z){
  const side=z<0?-1:1,shore=Math.abs(z)-Math.abs(coastEdge(x,side));
  if(shore<0)return -15;
- const rise=Math.max(0,shore);
- const rolling=5*Math.sin(x*.013+side)+3*Math.cos(x*.031+z*.017);
+ const rise=Math.max(0,shore),rolling=5*Math.sin(x*.013+side)+3*Math.cos(x*.031+z*.017);
  return 1.5+rise*.22+Math.pow(rise/190,1.35)*44+rolling*Math.min(1,rise/60);
 }
+// Felles byggeplan og vei: terrengmesh, hus og lys bruker identiske høyder.
+function groundHeight(x,z){
+ let y=naturalGroundHeight(x,z);
+ for(let row=0;row<2;row++){
+  const roadZ=-230-row*75;
+  const roadBase=naturalGroundHeight(x,roadZ);
+  const distance=Math.abs(z-roadZ);
+  const flatten=1-THREE.MathUtils.smoothstep(distance,12,32);
+  y=THREE.MathUtils.lerp(y,roadBase,flatten);
+ }
+ return y;
+}
 function createCoast(side){
- const nx=112,nz=48,geo=new THREE.PlaneGeometry(1700,700,nx,nz);
+ const nx=230,nz=130,geo=new THREE.PlaneGeometry(1700,700,nx,nz);
  geo.rotateX(-Math.PI/2);const p=geo.attributes.position,colors=[],c=new THREE.Color();
  for(let i=0;i<p.count;i++){
   const x=p.getX(i)-200,z=p.getZ(i)+side*490;
@@ -90,6 +101,11 @@ const roofColors=[0x3e4447,0x5e3b34,0x4e5152];
 const windowMat=new THREE.MeshStandardMaterial({color:0xffdca4,emissive:0xe4a765,emissiveIntensity:.35});
 function house(x,z,i){
  const y=groundHeight(x,z),g=new THREE.Group();g.position.set(x,y,z);scene.add(g);
+ const footing=new THREE.Mesh(new THREE.CylinderGeometry(.75,1.05,3,10),poleMat);footing.position.y=-.6;g.add(footing);
+ // Fundament går ned i terrenget og skjuler små avvik fra mesh-interpolasjonen.
+ const baseY=Math.min(groundHeight(x-10,z-9),groundHeight(x+10,z-9),groundHeight(x-10,z+9),groundHeight(x+10,z+9));
+ const foundationDepth=Math.max(3,y-baseY+4);
+ box(21,foundationDepth,19,0x777a74,0,-foundationDepth/2+.15,0,g);
  const w=15+(i%3)*2,d=13+(i%2)*2,h=10+(i%3);
  box(w,h,d,houseColors[i%houseColors.length],0,h/2,0,g);
  const roofShape=new THREE.Shape();roofShape.moveTo(-w/2-1,0);roofShape.lineTo(0,4.4);roofShape.lineTo(w/2+1,0);roofShape.closePath();
@@ -105,6 +121,14 @@ function house(x,z,i){
 for(let i=0;i<18;i++){
  const col=i%9,row=Math.floor(i/9),x=-620+col*53,z=-230-row*75;
  house(x,z,i);
+}
+// Smale grusveier følger de samme terrenghøydene som hus og lyktestolper.
+const roadMat=new THREE.MeshStandardMaterial({color:0x77766f,roughness:1,side:THREE.DoubleSide});
+for(let row=0;row<2;row++){
+ const rz=-230-row*75,geo=new THREE.PlaneGeometry(525,11,110,2);geo.rotateX(-Math.PI/2);
+ const p=geo.attributes.position;
+ for(let i=0;i<p.count;i++){const wx=p.getX(i)-410,wz=p.getZ(i)+rz;p.setXYZ(i,wx,groundHeight(wx,wz)+.22,wz)}
+ geo.computeVertexNormals();const road=new THREE.Mesh(geo,roadMat);scene.add(road);
 }
 const poleMat=new THREE.MeshStandardMaterial({color:0x677478,metalness:.6,roughness:.4});
 const glowMat=new THREE.MeshStandardMaterial({color:0xffedc4,emissive:0xffd68b,emissiveIntensity:1.4});
