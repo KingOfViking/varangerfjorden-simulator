@@ -38,15 +38,15 @@ const seaGeo=new THREE.PlaneGeometry(7000,7000,210,210);seaGeo.rotateX(-Math.PI/
 // V1.4: Helhetlig, stilisert Kiberg havn. Alle objekter bruker samme terrengfunksjon.
 // Lokal koordinatmodell, ikke faktiske sjøkart eller Google Street View-geometri.
 const groundMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
-function coastEdge(x,side){const bay=side<0?340-140*Math.exp(-Math.pow((x+260)/310,2)):165+32*Math.sin(x*.004);return side*(bay+9*Math.sin(x*.013)+4*Math.cos(x*.036));}
+function coastEdge(x,side){if(side<0)return -3600;const beach=175+12*Math.sin(x*.008);const innerHarbor=110-72*Math.exp(-Math.pow((x+130)/190,2));const easternHeadland=72*Math.max(0,Math.min(1,(x-120)/260));return innerHarbor+beach*.22+easternHeadland+5*Math.sin(x*.024);}
 function groundHeight(x,z){
- const side=z<0?-1:1,shore=Math.abs(z)-Math.abs(coastEdge(x,side));
+ const side=z<0?-1:1,shore=z-coastEdge(x,side);
  if(shore<0)return -15;
  const rise=Math.max(0,shore);
  // Kystlandskap med lave strandterrasser og avrundede åser.
  const rolling=5*Math.sin(x*.009+side)+3.5*Math.cos(x*.025+z*.014)+1.6*Math.sin((x+z)*.049);
  const texture=2.4*Math.sin(x*.055+z*.041)*Math.cos(z*.044-x*.018)+.8*Math.sin(x*.13-z*.11);
- const ridge=side<0?Math.pow(Math.max(0,rise-210)/310,1.35)*27:Math.pow(Math.max(0,rise-145)/330,1.35)*40;const cliffs=4*Math.abs(Math.sin(x*.012+z*.004))*Math.min(1,Math.max(0,rise-120)/220);return 1.2+rise*.045+ridge+cliffs+rolling*Math.min(1,rise/80)+texture*Math.min(1,rise/65);
+ const ridge=Math.pow(Math.max(0,rise-170)/350,1.4)*36;const cliffs=4*Math.abs(Math.sin(x*.012+z*.004))*Math.min(1,Math.max(0,rise-120)/220);return 1.2+rise*.045+ridge+cliffs+rolling*Math.min(1,rise/80)+texture*Math.min(1,rise/65);
 }
 // Samme terrengfunksjon brukes av bygninger, veier og lys.
 function buildingGround(x,z){return groundHeight(x,z)}
@@ -57,7 +57,7 @@ function createCoast(side){
   const x=p.getX(i)-200,z=p.getZ(i)+side*690;
   const y=groundHeight(x,z);
   p.setXYZ(i,x,y,z);
-  const shore=Math.abs(z)-Math.abs(coastEdge(x,side));
+  const shore=z-coastEdge(x,side);
   if(shore<16)c.setRGB(.58,.54,.43);
   else if(shore<70)c.setRGB(.21,.34,.17);
   else if(shore<210)c.setRGB(.16,.27,.13);
@@ -67,7 +67,7 @@ function createCoast(side){
  geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.computeVertexNormals();
  const mesh=new THREE.Mesh(geo,groundMat);mesh.receiveShadow=true;mesh.castShadow=true;scene.add(mesh);
 }
-createCoast(-1);createCoast(1);
+createCoast(1);
 function box(w,h,d,color,x,y,z,group=scene){
  const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color,roughness:.86}));
  mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);return mesh;
@@ -93,19 +93,19 @@ function curvedMole(points,width=15){
  }
 }
 // Nordre molo fra vestre strandsone; søndre molo skjermer den indre havna.
-curvedMole([[-475,-205],[-420,-215],[-360,-220],[-305,-212],[-250,-195],[-205,-167],[-177,-128]],17);
-curvedMole([[-460,160],[-400,160],[-345,152],[-285,142],[-225,123],[-175,96]],16);
+curvedMole([[-360,115],[-352,65],[-345,10],[-337,-47],[-330,-95],[-335,-103]],14);
+curvedMole([[-295,-175],[-225,-195],[-145,-220],[-65,-245],[15,-265],[85,-268],[145,-247],[200,-210],[260,-160],[310,-120]],17);
 function navigationBeacon(x,z,color){
  box(2.5,8,2.5,0xd6d9d8,x,6,z);
  const mat=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:1.3});
  const head=new THREE.Mesh(new THREE.CylinderGeometry(2,2,2,12),mat);head.position.set(x,11,z);scene.add(head);
  const light=new THREE.PointLight(color,4,65);light.position.set(x,11,z);scene.add(light);
 }
-navigationBeacon(-177,-128,0x34ff78);navigationBeacon(-175,96,0xff4343);
+navigationBeacon(-335,-103,0x34ff78);navigationBeacon(-295,-175,0xff4343);
 // Kort kai langs land, med stolper og planker. Den blokkerer ikke havneutgangen.
-box(18,1.5,85,0x77654e,-345,2,-92);
-for(let i=0;i<19;i++)box(18,.12,.16,0x453b30,-345,2.83,-132+i*4.5);
-for(let i=0;i<7;i++){const z=-130+i*12;box(1.6,7,1.6,0x494039,-354,-1,z);box(1.6,7,1.6,0x494039,-336,-1,z)}
+box(18,1.5,85,0x77654e,-365,2,5);
+for(let i=0;i<19;i++)box(18,.12,.16,0x453b30,-365,2.83,-35+i*4.5);
+for(let i=0;i<7;i++){const z=-35+i*12;box(1.6,7,1.6,0x494039,-374,-1,z);box(1.6,7,1.6,0x494039,-356,-1,z)}
 const houseColors=[0xe5dfd0,0xc24d42,0x91a8b0,0xd3b184,0xb4b7b1];
 const roofColors=[0x3e4447,0x5e3b34,0x4e5152];
 const windowMat=new THREE.MeshStandardMaterial({color:0xffdca4,emissive:0xe4a765,emissiveIntensity:.35});
@@ -130,7 +130,7 @@ function house(x,z,i){
 }
 // Landsbystruktur: små husgrupper langs to veier, ikke en helt rett husrekke.
 for(let i=0;i<18;i++){
- const col=i%9,row=Math.floor(i/9),x=-540+col*65+(row?24:0)+Math.sin(i*2.1)*12,z=220+row*58+Math.sin(i*2.7)*17;
+ const col=i%9,row=Math.floor(i/9),x=-420+col*70+Math.sin(i*2.1)*13,z=160+row*62+Math.sin(col*.65)*30+Math.sin(i*2.7)*12;
  house(x,z,i);
 }
 // Fiskerihavn: naust, redskapsbygg og kaidetaljer. Omtrentlig plassering.
@@ -140,9 +140,9 @@ function harborShed(px,pz,w,d,h,wall,roofColor){
  const roof=new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*.76,4,4),new THREE.MeshStandardMaterial({color:roofColor,roughness:.9}));roof.rotation.y=Math.PI/4;roof.position.y=h+1.4;roof.scale.z=d/w;roof.castShadow=true;g.add(roof);
  box(w*.35,h*.62,.25,0x444e4f,0,h*.31,d/2+.18,g);
 }
-harborShed(-500,195,24,18,12,0x9a342e,0x343b3d);
-harborShed(-455,207,31,23,13,0x9b9d91,0x343b3d);
-harborShed(-390,216,22,18,11,0xc4c6b8,0x484b4c);
+harborShed(-420,195,24,18,12,0x9a342e,0x343b3d);
+harborShed(-365,207,31,23,13,0x9b9d91,0x343b3d);
+harborShed(-280,216,22,18,11,0xc4c6b8,0x484b4c);
 for(let i=0;i<7;i++){
  box(3.5,2.4,2.8,i%2?0x52696e:0x9a784e,-365,3,-125+i*12);
  const bollard=new THREE.Mesh(new THREE.CylinderGeometry(.7,.8,2,10),new THREE.MeshStandardMaterial({color:0x303b40,metalness:.4,roughness:.65}));bollard.position.set(-337,3.7,-125+i*12);scene.add(bollard);
@@ -166,7 +166,7 @@ function terrainRoad(x0,x1,z0,z1,width){
  }
  geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setIndex(indices);geo.computeVertexNormals();scene.add(new THREE.Mesh(geo,roadMat));
 }
-terrainRoad(-570,90,212,220,10);terrainRoad(-560,80,292,305,8);
+terrainRoad(-520,310,172,190,10);terrainRoad(-450,290,252,280,8);terrainRoad(-80,245,172,245,7);
 const poleMat=new THREE.MeshStandardMaterial({color:0x677478,metalness:.6,roughness:.4});
 const glowMat=new THREE.MeshStandardMaterial({color:0xffedc4,emissive:0xffd68b,emissiveIntensity:1.4});
 function streetLamp(x,z,i){
@@ -210,11 +210,11 @@ function dockedBoat(bx,bz,color,heading){
  box(.18,9,.18,0x646d70,0,12,-4,g);
  const antenna=new THREE.Mesh(new THREE.CylinderGeometry(.07,.08,4,6),new THREE.MeshStandardMaterial({color:0xc9d0d0}));antenna.position.set(0,18,-4);g.add(antenna);
 }
-dockedBoat(-325,-111,0xb64b3c,.25);
-dockedBoat(-325,-89,0x305e7b,.15);
+dockedBoat(-290,8,0xb64b3c,.25);
+dockedBoat(-290,35,0x305e7b,.15);
 // Steinfyllingene er nå integrert i de buede moloene.
 // Enkel indre flytekai parallelt med nordre molo (plassering er foreløpig omtrentlig).
-const floatDock=new THREE.Group();floatDock.position.set(-305,.95,-130);floatDock.rotation.y=-.14;scene.add(floatDock);
+const floatDock=new THREE.Group();floatDock.position.set(-315,.95,8);floatDock.rotation.y=-.14;scene.add(floatDock);
 const dockDeck=new THREE.Mesh(new THREE.BoxGeometry(8,1.2,92),new THREE.MeshStandardMaterial({color:0x777c78,roughness:.85}));dockDeck.castShadow=true;dockDeck.receiveShadow=true;floatDock.add(dockDeck);
 for(let i=0;i<12;i++){const plank=new THREE.Mesh(new THREE.BoxGeometry(8.4,.13,.3),new THREE.MeshStandardMaterial({color:0x9b9b90,roughness:.95}));plank.position.set(0,.7,-43+i*8);floatDock.add(plank)}
 // Boat local bow points toward +Z; rotate hull 180 degrees so the pointed bow faces travel direction.
