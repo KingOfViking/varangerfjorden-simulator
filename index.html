@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Varangerfjorden Simulator 1.2 – bedre hus og gatelykter</title><style>
+<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Varangerfjorden Simulator 1.3 – ombygd Kiberg havn</title><style>
 *{box-sizing:border-box}body{margin:0;overflow:hidden;background:#06121b;color:#eef7fc;font-family:system-ui,Segoe UI,sans-serif}canvas{display:block}#hud{position:absolute;top:16px;left:16px;padding:15px 18px;background:#071521c9;border:1px solid #4e879477;border-radius:12px;min-width:235px;backdrop-filter:blur(8px)}#hud h1{font-size:16px;margin:0 0 8px;color:#9be4e7}#hud p{margin:5px 0;font-size:13px}#hud b{color:#fff}#hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:#071521db;padding:11px 18px;border:1px solid #4e879477;border-radius:12px;font-size:12px;text-align:center;max-width:95vw;line-height:1.7}#right{position:absolute;top:16px;right:16px;display:flex;gap:8px}button{border:1px solid #68b6c4;background:#103847;color:white;padding:10px 13px;border-radius:9px;cursor:pointer;font-weight:600}button:hover{background:#1a5868}#message{position:absolute;top:100px;left:50%;transform:translateX(-50%);background:#0c2836c9;padding:8px 14px;border-radius:9px;pointer-events:none}#fishPanel{position:absolute;top:240px;left:16px;background:#071521df;border:1px solid #4e879477;border-radius:12px;padding:12px 15px;width:235px;font-size:13px}#fishPanel p{margin:6px 0}#tensionOuter{height:9px;background:#233a46;border-radius:5px;overflow:hidden}#tensionBar{height:100%;width:0%;background:#51d6b0;transition:width .12s}#fishBtn{margin-top:8px;width:100%}#touch{display:none;position:absolute;bottom:95px;left:12px;right:12px;justify-content:space-between;pointer-events:none}#touch>div{display:flex;gap:8px}#touch button{pointer-events:auto;min-width:54px;min-height:52px;font-size:19px}@media(pointer:coarse){#touch{display:flex}#hint{font-size:10px;bottom:8px}#hud{top:8px;left:8px;min-width:170px;padding:10px}#right{top:8px;right:8px}#right button{padding:8px;font-size:11px}#fishPanel{top:215px;left:8px;width:185px;padding:9px;font-size:11px}}
 #gearPanel{position:absolute;top:16px;right:16px;width:250px;max-height:calc(100vh - 110px);overflow-y:auto;background:#071521df;border:1px solid #4e879477;border-radius:12px;padding:12px 14px;font-size:12px;backdrop-filter:blur(8px)}#gearPanel p{margin:7px 0}#gearPanel select{width:100%;padding:8px;border-radius:7px;background:#123846;color:white;border:1px solid #68b6c4}#gearPanel button{margin:4px 3px 3px 0;padding:8px;font-size:12px}#gearTip{color:#b8dbe1;line-height:1.4}#sonar{border-top:1px solid #3b6674;margin-top:9px;padding-top:9px}#sonarCanvas{width:100%;height:76px;border-radius:6px;background:#071b30}#right{top:auto;bottom:75px;right:16px}#fishPanel{top:240px}@media(max-width:750px){#gearPanel{top:155px;right:8px;width:170px;max-height:45vh;padding:9px;font-size:11px}#gearPanel button{font-size:10px}#fishPanel{top:230px;width:175px}#right{bottom:70px}#hint{max-width:100%;font-size:10px}}
 
@@ -72,15 +72,29 @@ island(1380,900,1310,700,255,5);
 island(-1480,1340,920,790,210,9);
 island(1920,-1670,1050,1100,330,4);
 // Enkel steinstrand og spredte steinblokker langs havneområdet.
+// Stein ligger langs strandlinjen i stedet for å sveve over havna.
 const stoneMaterials=[0x626b6a,0x747773,0x8a8a80,0x535f62].map(color=>new THREE.MeshStandardMaterial({color,roughness:1}));
 const pebbleGeo=new THREE.DodecahedronGeometry(1,0);
-for(let i=0;i<115;i++){
- const t=i*2.399963,rad=18+Math.sqrt(i/115)*190;
- const px=-410+Math.cos(t)*rad,pz=-205+Math.sin(t)*rad*.62;
- const scale=1.2+(i%11)*.34;
+function shoreHeight(px,pz){
+ const nx=(px+770)/1170,nz=(pz+350)/730;
+ const angle=Math.atan2(nz,nx),dist=Math.hypot(nx,nz);
+ const coast=1+.075*Math.sin(angle*7+2)+.045*Math.cos(angle*13-2)+.035*Math.sin(angle*23+6);
+ const inland=THREE.MathUtils.clamp((coast-dist)/.58,0,1);
+ const ridge=Math.pow(inland,1.45),noise=terrainNoise(px,pz,2);
+ let elevation=-5+ridge*185*(.75+.3*noise)+Math.pow(inland,2)*185*.14*Math.sin(nx*9+nz*5+2);
+ const harborDistance=Math.hypot((px+285)/205,(pz+48)/175);
+ const harborCut=1-THREE.MathUtils.smoothstep(harborDistance,.55,1.15);
+ const channelAcross=1-THREE.MathUtils.smoothstep(Math.abs(pz-5),82,155);
+ const channelStart=THREE.MathUtils.smoothstep(px,-370,-265);
+ return THREE.MathUtils.lerp(elevation,-12,Math.max(harborCut,channelAcross*channelStart));
+}
+for(let i=0;i<160;i++){
+ const px=-640+(i%40)*10,pz=-315+Math.floor(i/40)*13;
+ const y=shoreHeight(px,pz);
+ if(y<1||y>24)continue;
+ const size=.8+(i%7)*.34;
  const stone=new THREE.Mesh(pebbleGeo,stoneMaterials[i%stoneMaterials.length]);
- stone.position.set(px,2.5+scale*.25,pz);stone.scale.set(scale*1.3,scale*.5,scale);
- stone.rotation.set(.1*i,.37*i,.06*i);stone.castShadow=i%5===0;scene.add(stone);
+ stone.position.set(px,y+size*.23,pz);stone.scale.set(size*1.2,size*.5,size);stone.rotation.y=i*.7;scene.add(stone);
 }
 function box(w,h,d,color,x,y,z,group=scene){let m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color,roughness:.8}));m.position.set(x,y,z);group.add(m);return m}
 // To moloarmer rammer inn en tydelig utseiling mot åpent hav (+X).
@@ -90,16 +104,12 @@ const moleTop=new THREE.MeshStandardMaterial({color:0x99958b,roughness:1});
 function makeMole(ax,az,bx,bz,width){
  const dx=bx-ax,dz=bz-az,length=Math.hypot(dx,dz),angle=Math.atan2(dx,dz);
  const group=new THREE.Group();group.position.set((ax+bx)/2,0,(az+bz)/2);group.rotation.y=angle;scene.add(group);
- const foundation=new THREE.Mesh(new THREE.BoxGeometry(width+6,4.2,length+5),moleStone);
- foundation.position.y=-.7;foundation.castShadow=true;foundation.receiveShadow=true;group.add(foundation);
- const cap=new THREE.Mesh(new THREE.BoxGeometry(width,1.1,length),moleTop);
- cap.position.y=1.85;cap.castShadow=true;cap.receiveShadow=true;group.add(cap);
- for(let i=0;i<Math.ceil(length/9);i++){
-  const zz=-length/2+(i+.5)*length/Math.ceil(length/9);
-  for(const side of [-1,1]){
-   const stone=new THREE.Mesh(new THREE.DodecahedronGeometry(2.3+(i%3)*.35,0),moleStone);
-   stone.position.set(side*(width/2+1.8),.1,zz);stone.scale.set(1.15,.7,1.2);group.add(stone);
-  }
+ const foundation=new THREE.Mesh(new THREE.BoxGeometry(width+6,5,length+5),moleStone);foundation.position.y=-1;foundation.castShadow=true;group.add(foundation);
+ const cap=new THREE.Mesh(new THREE.BoxGeometry(width,1,length),moleTop);cap.position.y=2;cap.castShadow=true;group.add(cap);
+ const rockGeo=new THREE.DodecahedronGeometry(2.8,0);
+ for(let i=0;i<Math.ceil(length/8);i++)for(const side of [-1,1]){
+  const zz=-length/2+(i+.5)*length/Math.ceil(length/8);
+  const stone=new THREE.Mesh(rockGeo,moleStone);stone.position.set(side*(width/2+1.5),.4,zz);stone.scale.set(1.2,.7,1.5);group.add(stone);
  }
  return group;
 }
@@ -114,14 +124,17 @@ function harborLight(px,pz,color){
 harborLight(-40,-105,0x2eff75);
 harborLight(-40,115,0xff3535);
 // Stylized Kiberg waterfront and pier on the nearby coast.
-const pier=box(18,2,145,0x5e4b38,-300,1,-65);for(let i=0;i<8;i++){let z=-127+i*18;box(2,9,2,0x43372d,-307,-3,z);box(2,9,2,0x43372d,-293,-3,z)}
+// Kortere, mer troverdig trebrygge med plankestruktur og fortøyningsstolper.
+const pier=box(15,1.3,74,0x75624b,-330,1,-48);
+for(let i=0;i<20;i++){const z=-84+i*3.7;box(15,.12,.18,0x40382e,-330,1.74,z)}
+for(let i=0;i<6;i++){const z=-80+i*14;box(1.5,7,1.5,0x3e3630,-338,-2,z);box(1.5,7,1.5,0x3e3630,-322,-2,z)}
 // V1.2: Egne, detaljerte nordnorske hus og gatelykter (ikke hentet fra Street View).
 const windowGlow=new THREE.MeshStandardMaterial({color:0xffdb9a,emissive:0xffb95e,emissiveIntensity:.55,roughness:.3});
 const windowDay=new THREE.MeshStandardMaterial({color:0x9dc2cc,metalness:.1,roughness:.24});
 const roofColors=[0x373d43,0x603d35,0x4b5052,0x6b3e35];
 const wallColors=[0xe3ded0,0xb74b43,0xd1c5ad,0x78929b,0xb2b6ad,0xd3a96e];
 function makeHouse(hx,hz,id){
- const g=new THREE.Group();g.position.set(hx,0,hz);scene.add(g);
+ const ground=Math.max(1,shoreHeight(hx,hz));if(ground<3)return;const g=new THREE.Group();g.position.set(hx,ground-3,hz);scene.add(g);
  const width=15+(id%3)*3,depth=12+(id%2)*3,height=9+(id%4)*1.3;
  const walls=new THREE.Mesh(new THREE.BoxGeometry(width,height,depth),new THREE.MeshStandardMaterial({color:wallColors[id%wallColors.length],roughness:.91}));
  walls.position.y=height/2+3;walls.castShadow=true;walls.receiveShadow=true;g.add(walls);
@@ -150,7 +163,7 @@ for(let i=0;i<25;i++){
 const lampMetal=new THREE.MeshStandardMaterial({color:0x697479,metalness:.75,roughness:.32});
 const lampGlass=new THREE.MeshStandardMaterial({color:0xfff1c7,emissive:0xffd28a,emissiveIntensity:1.5});
 function streetLamp(lx,lz,id){
- const g=new THREE.Group();g.position.set(lx,0,lz);scene.add(g);
+ const ground=shoreHeight(lx,lz);if(ground<2)return;const g=new THREE.Group();g.position.set(lx,ground-2,lz);scene.add(g);
  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.22,.36,13,10),lampMetal);pole.position.y=8;pole.castShadow=true;g.add(pole);
  const arm=new THREE.Mesh(new THREE.BoxGeometry(4,.35,.35),lampMetal);arm.position.set(1.9,14.3,0);g.add(arm);
  const head=new THREE.Mesh(new THREE.BoxGeometry(2.1,.55,1.2),lampMetal);head.position.set(3.55,13.9,0);g.add(head);
