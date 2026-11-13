@@ -75,24 +75,33 @@ function box(w,h,d,color,x,y,z,group=scene){
 // Moloer bygges på sjøbunnen, parallelt med seilingsleden, med bred fri åpning.
 const moleRock=new THREE.MeshStandardMaterial({color:0x747875,roughness:1,flatShading:true});
 const moleTop=new THREE.MeshStandardMaterial({color:0x98968c,roughness:1});
-function mole(x1,x2,z){
- const length=x2-x1,center=(x1+x2)/2;
- const base=new THREE.Mesh(new THREE.BoxGeometry(length,4,17),moleRock);base.position.set(center,.1,z);base.castShadow=true;scene.add(base);
- const top=new THREE.Mesh(new THREE.BoxGeometry(length,1,12),moleTop);top.position.set(center,2.5,z);top.receiveShadow=true;scene.add(top);
- const stoneGeo=new THREE.DodecahedronGeometry(2.2,0);
- for(let i=0;i<Math.ceil(length/9);i++)for(const side of [-1,1]){
-  const rock=new THREE.Mesh(stoneGeo,moleRock);
-  rock.position.set(x1+4+i*9,.5,z+side*10);rock.scale.set(1.5,.8,1.15);scene.add(rock);
+// Kiberg havn: buede steinmoloer med synlig innseiling. Forenklet geografisk modell.
+const harborMoles=[];
+function curvedMole(points,width=15){
+ const rockMat=moleRock,topMat=moleTop;
+ for(let j=0;j<points.length-1;j++){
+  const a=new THREE.Vector3(points[j][0],0,points[j][1]),b=new THREE.Vector3(points[j+1][0],0,points[j+1][1]);
+  const mid=a.clone().add(b).multiplyScalar(.5),len=a.distanceTo(b),angle=Math.atan2(b.x-a.x,b.z-a.z);
+  const g=new THREE.Group();g.position.copy(mid);g.rotation.y=angle;scene.add(g);
+  const core=new THREE.Mesh(new THREE.BoxGeometry(width,4.5,len+2),rockMat);core.position.y=.4;core.castShadow=true;core.receiveShadow=true;g.add(core);
+  const crest=new THREE.Mesh(new THREE.BoxGeometry(width-4,.7,len+1),topMat);crest.position.y=3;crest.receiveShadow=true;g.add(crest);
+  for(let k=0;k<Math.ceil(len/6);k++)for(const side of [-1,1]){
+   const stone=new THREE.Mesh(new THREE.DodecahedronGeometry(1.8,0),rockMat);
+   stone.position.set(side*(width/2+1),.65,-len/2+3+k*6);stone.scale.set(1.4,.85,1.1);stone.rotation.set(k*.7,j*.6,k*.5);g.add(stone);
+  }
+  harborMoles.push(g);
  }
 }
-mole(-165,-20,-118);mole(-145,125,125);
+// Nordre molo fra vestre strandsone; søndre molo skjermer den indre havna.
+curvedMole([[-420,-153],[-360,-168],[-290,-176],[-225,-168],[-175,-142],[-142,-108]],17);
+curvedMole([[-410,145],[-345,152],[-280,158],[-215,155],[-158,137],[-105,102]],16);
 function navigationBeacon(x,z,color){
  box(2.5,8,2.5,0xd6d9d8,x,6,z);
  const mat=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:1.3});
  const head=new THREE.Mesh(new THREE.CylinderGeometry(2,2,2,12),mat);head.position.set(x,11,z);scene.add(head);
  const light=new THREE.PointLight(color,4,65);light.position.set(x,11,z);scene.add(light);
 }
-navigationBeacon(-20,-118,0x34ff78);navigationBeacon(125,125,0xff4343);
+navigationBeacon(-142,-108,0x34ff78);navigationBeacon(-105,102,0xff4343);
 // Kort kai langs land, med stolper og planker. Den blokkerer ikke havneutgangen.
 box(18,1.5,85,0x77654e,-345,2,-92);
 for(let i=0;i<19;i++)box(18,.12,.16,0x453b30,-345,2.83,-132+i*4.5);
