@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Varangerfjorden Simulator 1.9 – forbedret 3D-grafikk</title><style>
+<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Varangerfjorden Simulator 2.0 – Kiberg landskap</title><style>
 *{box-sizing:border-box}body{margin:0;overflow:hidden;background:#06121b;color:#eef7fc;font-family:system-ui,Segoe UI,sans-serif}canvas{display:block}#hud{position:absolute;top:16px;left:16px;padding:15px 18px;background:#071521c9;border:1px solid #4e879477;border-radius:12px;min-width:235px;backdrop-filter:blur(8px)}#hud h1{font-size:16px;margin:0 0 8px;color:#9be4e7}#hud p{margin:5px 0;font-size:13px}#hud b{color:#fff}#hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:#071521db;padding:11px 18px;border:1px solid #4e879477;border-radius:12px;font-size:12px;text-align:center;max-width:95vw;line-height:1.7}#right{position:absolute;top:16px;right:16px;display:flex;gap:8px}button{border:1px solid #68b6c4;background:#103847;color:white;padding:10px 13px;border-radius:9px;cursor:pointer;font-weight:600}button:hover{background:#1a5868}#message{position:absolute;top:100px;left:50%;transform:translateX(-50%);background:#0c2836c9;padding:8px 14px;border-radius:9px;pointer-events:none}#fishPanel{position:absolute;top:240px;left:16px;background:#071521df;border:1px solid #4e879477;border-radius:12px;padding:12px 15px;width:235px;font-size:13px}#fishPanel p{margin:6px 0}#tensionOuter{height:9px;background:#233a46;border-radius:5px;overflow:hidden}#tensionBar{height:100%;width:0%;background:#51d6b0;transition:width .12s}#fishBtn{margin-top:8px;width:100%}#touch{display:none;position:absolute;bottom:95px;left:12px;right:12px;justify-content:space-between;pointer-events:none}#touch>div{display:flex;gap:8px}#touch button{pointer-events:auto;min-width:54px;min-height:52px;font-size:19px}@media(pointer:coarse){#touch{display:flex}#hint{font-size:10px;bottom:8px}#hud{top:8px;left:8px;min-width:170px;padding:10px}#right{top:8px;right:8px}#right button{padding:8px;font-size:11px}#fishPanel{top:215px;left:8px;width:185px;padding:9px;font-size:11px}}
 #gearPanel{position:absolute;top:16px;right:16px;width:250px;max-height:calc(100vh - 110px);overflow-y:auto;background:#071521df;border:1px solid #4e879477;border-radius:12px;padding:12px 14px;font-size:12px;backdrop-filter:blur(8px)}#gearPanel p{margin:7px 0}#gearPanel select{width:100%;padding:8px;border-radius:7px;background:#123846;color:white;border:1px solid #68b6c4}#gearPanel button{margin:4px 3px 3px 0;padding:8px;font-size:12px}#gearTip{color:#b8dbe1;line-height:1.4}#sonar{border-top:1px solid #3b6674;margin-top:9px;padding-top:9px}#sonarCanvas{width:100%;height:76px;border-radius:6px;background:#071b30}#right{top:auto;bottom:75px;right:16px}#fishPanel{top:240px}@media(max-width:750px){#gearPanel{top:155px;right:8px;width:170px;max-height:45vh;padding:9px;font-size:11px}#gearPanel button{font-size:10px}#fishPanel{top:230px;width:175px}#right{bottom:70px}#hint{max-width:100%;font-size:10px}}
 
@@ -43,21 +43,25 @@ function groundHeight(x,z){
  const side=z<0?-1:1,shore=Math.abs(z)-Math.abs(coastEdge(x,side));
  if(shore<0)return -15;
  const rise=Math.max(0,shore);
+ // Kystlandskap med lave strandterrasser og avrundede åser.
  const rolling=2.5*Math.sin(x*.013+side)+1.5*Math.cos(x*.031+z*.017);
- return 1.2+rise*.10+Math.pow(rise/260,1.4)*21+rolling*Math.min(1,rise/60);
+ const texture=1.1*Math.sin(x*.055+z*.041)*Math.cos(z*.044-x*.018);
+ return 1.2+rise*.10+Math.pow(rise/260,1.4)*21+rolling*Math.min(1,rise/60)+texture*Math.min(1,rise/50);
 }
+// Samme terrengfunksjon brukes av bygninger, veier og lys.
+function buildingGround(x,z){return groundHeight(x,z)}
 function createCoast(side){
- const nx=112,nz=48,geo=new THREE.PlaneGeometry(1700,700,nx,nz);
+ const nx=220,nz=105,geo=new THREE.PlaneGeometry(1700,700,nx,nz);
  geo.rotateX(-Math.PI/2);const p=geo.attributes.position,colors=[],c=new THREE.Color();
  for(let i=0;i<p.count;i++){
   const x=p.getX(i)-200,z=p.getZ(i)+side*490;
   const y=groundHeight(x,z);
   p.setXYZ(i,x,y,z);
   const shore=Math.abs(z)-Math.abs(coastEdge(x,side));
-  if(shore<16)c.setRGB(side<0?.72:.43,side<0?.69:.44,side<0?.59:.41);
-  else if(shore<70)c.setRGB(.38,.42,.37);
-  else if(shore<210)c.setRGB(.34,.40,.34);
-  else c.setRGB(.43,.45,.42);
+  if(shore<16)c.setRGB(.58,.57,.49);
+  else if(shore<70)c.setRGB(.30,.36,.29);
+  else if(shore<210)c.setRGB(.25,.33,.26);
+  else c.setRGB(.31,.36,.32);
   colors.push(c.r,c.g,c.b);
  }
  geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.computeVertexNormals();
@@ -97,8 +101,12 @@ const houseColors=[0xe5dfd0,0xc24d42,0x91a8b0,0xd3b184,0xb4b7b1];
 const roofColors=[0x3e4447,0x5e3b34,0x4e5152];
 const windowMat=new THREE.MeshStandardMaterial({color:0xffdca4,emissive:0xe4a765,emissiveIntensity:.35});
 function house(x,z,i){
- const y=groundHeight(x,z),g=new THREE.Group();g.position.set(x,y,z);scene.add(g);
+ // Bygningene plasseres på terrengnivå med et sokkelfundament som dekker skråningen.
+ const y=buildingGround(x,z),g=new THREE.Group();g.position.set(x,y,z);scene.add(g);
  const w=15+(i%3)*2,d=13+(i%2)*2,h=10+(i%3);
+ const minY=Math.min(groundHeight(x-w/2,z-d/2),groundHeight(x+w/2,z-d/2),groundHeight(x-w/2,z+d/2),groundHeight(x+w/2,z+d/2));
+ const foundation=Math.max(2.5,y-minY+2.5);
+ box(w+1,foundation,d+1,0x77776e,0,-foundation/2+.15,0,g);
  box(w,h,d,houseColors[i%houseColors.length],0,h/2,0,g);
  const roofShape=new THREE.Shape();roofShape.moveTo(-w/2-1,0);roofShape.lineTo(0,4.4);roofShape.lineTo(w/2+1,0);roofShape.closePath();
  const roofGeo=new THREE.ExtrudeGeometry(roofShape,{depth:d+2,bevelEnabled:false});roofGeo.translate(0,h,-d/2-1);
@@ -106,14 +114,29 @@ function house(x,z,i){
  for(const wx of [-w*.25,w*.25]){
   const win=new THREE.Mesh(new THREE.BoxGeometry(2.8,2.8,.2),windowMat);win.position.set(wx,h*.57,d/2+.15);g.add(win);
   box(.16,3,.28,0xf4f0e5,wx,h*.57,d/2+.29,g);box(3,.16,.28,0xf4f0e5,wx,h*.57,d/2+.29,g);
+  const back=new THREE.Mesh(new THREE.BoxGeometry(2.5,2.5,.18),windowMat);back.position.set(wx,h*.57,-d/2-.12);g.add(back);
  }
  box(2.5,4.5,.25,0x655e57,0,2.25,d/2+.18,g);
  box(1.4,3,1.4,0x777b7a,w*.25,h+4,-d*.18,g);
 }
+// Landsbystruktur: små husgrupper langs to veier, ikke en helt rett husrekke.
 for(let i=0;i<18;i++){
- const col=i%9,row=Math.floor(i/9),x=-520+col*65,z=230+row*75;
+ const col=i%9,row=Math.floor(i/9),x=-520+col*65+(row?15:0),z=245+row*67+Math.sin(i*2.7)*9;
  house(x,z,i);
 }
+// Grusveier følger høyden i terrenget og har egne sideveier til husene.
+const roadMat=new THREE.MeshStandardMaterial({color:0x77766a,roughness:1,side:THREE.DoubleSide});
+function terrainRoad(x0,x1,z0,z1,width){
+ const segments=100,geo=new THREE.BufferGeometry(),vertices=[],indices=[];
+ for(let j=0;j<=segments;j++){
+  const t=j/segments,x=x0+(x1-x0)*t,z=z0+(z1-z0)*t;
+  const dx=x1-x0,dz=z1-z0,l=Math.hypot(dx,dz)||1,nx=-dz/l,nz=dx/l;
+  for(const side of [-1,1]){const px=x+nx*width*side/2,pz=z+nz*width*side/2;vertices.push(px,groundHeight(px,pz)+.25,pz)}
+  if(j<segments){const a=j*2;indices.push(a,a+1,a+2,a+1,a+3,a+2)}
+ }
+ geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setIndex(indices);geo.computeVertexNormals();scene.add(new THREE.Mesh(geo,roadMat));
+}
+terrainRoad(-570,90,216,216,10);terrainRoad(-560,80,312,312,8);
 const poleMat=new THREE.MeshStandardMaterial({color:0x677478,metalness:.6,roughness:.4});
 const glowMat=new THREE.MeshStandardMaterial({color:0xffedc4,emissive:0xffd68b,emissiveIntensity:1.4});
 function streetLamp(x,z,i){
@@ -123,7 +146,7 @@ function streetLamp(x,z,i){
  const lamp=new THREE.Mesh(new THREE.BoxGeometry(1.6,.35,1),glowMat);lamp.position.set(2.7,11.5,0);g.add(lamp);
  if(i%2===0){const light=new THREE.PointLight(0xffd9a2,2,35);light.position.set(2.7,11.2,0);g.add(light)}
 }
-for(let i=0;i<9;i++)streetLamp(-520+i*65,205,i);
+for(let i=0;i<9;i++)streetLamp(-520+i*65,216,i);
 // Strandstein kun på land, beregnet fra samme terrengmodell.
 const pebble=new THREE.DodecahedronGeometry(1.5,0);
 for(let i=0;i<110;i++){
