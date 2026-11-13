@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Varangerfjorden Simulator 1.0 – molo og havneutgang</title><style>
+<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Varangerfjorden Simulator 1.1 – åpen havneutgang</title><style>
 *{box-sizing:border-box}body{margin:0;overflow:hidden;background:#06121b;color:#eef7fc;font-family:system-ui,Segoe UI,sans-serif}canvas{display:block}#hud{position:absolute;top:16px;left:16px;padding:15px 18px;background:#071521c9;border:1px solid #4e879477;border-radius:12px;min-width:235px;backdrop-filter:blur(8px)}#hud h1{font-size:16px;margin:0 0 8px;color:#9be4e7}#hud p{margin:5px 0;font-size:13px}#hud b{color:#fff}#hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:#071521db;padding:11px 18px;border:1px solid #4e879477;border-radius:12px;font-size:12px;text-align:center;max-width:95vw;line-height:1.7}#right{position:absolute;top:16px;right:16px;display:flex;gap:8px}button{border:1px solid #68b6c4;background:#103847;color:white;padding:10px 13px;border-radius:9px;cursor:pointer;font-weight:600}button:hover{background:#1a5868}#message{position:absolute;top:100px;left:50%;transform:translateX(-50%);background:#0c2836c9;padding:8px 14px;border-radius:9px;pointer-events:none}#fishPanel{position:absolute;top:240px;left:16px;background:#071521df;border:1px solid #4e879477;border-radius:12px;padding:12px 15px;width:235px;font-size:13px}#fishPanel p{margin:6px 0}#tensionOuter{height:9px;background:#233a46;border-radius:5px;overflow:hidden}#tensionBar{height:100%;width:0%;background:#51d6b0;transition:width .12s}#fishBtn{margin-top:8px;width:100%}#touch{display:none;position:absolute;bottom:95px;left:12px;right:12px;justify-content:space-between;pointer-events:none}#touch>div{display:flex;gap:8px}#touch button{pointer-events:auto;min-width:54px;min-height:52px;font-size:19px}@media(pointer:coarse){#touch{display:flex}#hint{font-size:10px;bottom:8px}#hud{top:8px;left:8px;min-width:170px;padding:10px}#right{top:8px;right:8px}#right button{padding:8px;font-size:11px}#fishPanel{top:215px;left:8px;width:185px;padding:9px;font-size:11px}}
 #gearPanel{position:absolute;top:16px;right:16px;width:250px;max-height:calc(100vh - 110px);overflow-y:auto;background:#071521df;border:1px solid #4e879477;border-radius:12px;padding:12px 14px;font-size:12px;backdrop-filter:blur(8px)}#gearPanel p{margin:7px 0}#gearPanel select{width:100%;padding:8px;border-radius:7px;background:#123846;color:white;border:1px solid #68b6c4}#gearPanel button{margin:4px 3px 3px 0;padding:8px;font-size:12px}#gearTip{color:#b8dbe1;line-height:1.4}#sonar{border-top:1px solid #3b6674;margin-top:9px;padding-top:9px}#sonarCanvas{width:100%;height:76px;border-radius:6px;background:#071b30}#right{top:auto;bottom:75px;right:16px}#fishPanel{top:240px}@media(max-width:750px){#gearPanel{top:155px;right:8px;width:170px;max-height:45vh;padding:9px;font-size:11px}#gearPanel button{font-size:10px}#fishPanel{top:230px;width:175px}#right{bottom:70px}#hint{max-width:100%;font-size:10px}}
 
@@ -47,7 +47,13 @@ function island(cx,cz,rx,rz,height,seed){
   const wx=lx+cx,wz=lz+cz;
   const harborDistance=Math.hypot((wx+285)/205,(wz+48)/175);
   const harborCut=1-THREE.MathUtils.smoothstep(harborDistance,.55,1.15);
-  const finalElevation=THREE.MathUtils.lerp(elevation,-9,harborCut);
+  // Åpen seilingsled mot øst (+X): fjern land som tidligere dannet en vegg foran båten.
+  // Kanalen går mellom moloene og videre ut til åpent vann.
+  const channelAcross=1-THREE.MathUtils.smoothstep(Math.abs(wz-5),82,155);
+  const channelStart=THREE.MathUtils.smoothstep(wx,-370,-265);
+  const channelCut=channelAcross*channelStart;
+  const waterCut=Math.max(harborCut,channelCut);
+  const finalElevation=THREE.MathUtils.lerp(elevation,-12,waterCut);
   p.setY(i,finalElevation);
   const n=Math.sin((lx+cx)*.083+(lz+cz)*.059)*Math.cos((lx+cx)*.049-(lz+cz)*.071);
   if(finalElevation<4)c.setRGB(.35,.40,.41);
