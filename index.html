@@ -246,37 +246,47 @@ const floatDock=new THREE.Group();floatDock.position.set(-331,.95,8);floatDock.r
 const dockDeck=new THREE.Mesh(new THREE.BoxGeometry(8,1.2,92),new THREE.MeshStandardMaterial({color:0x777c78,roughness:.85}));dockDeck.castShadow=true;dockDeck.receiveShadow=true;floatDock.add(dockDeck);
 for(let i=0;i<12;i++){const plank=new THREE.Mesh(new THREE.BoxGeometry(8.4,.13,.3),new THREE.MeshStandardMaterial({color:0x9b9b90,roughness:.95}));plank.position.set(0,.7,-43+i*8);floatDock.add(plank)}
 // Boat local bow points toward +Z; rotate hull 180 degrees so the pointed bow faces travel direction.
-const boat=new THREE.Group();scene.add(boat);const hullShape=new THREE.Shape();hullShape.moveTo(-3.4,-8);hullShape.lineTo(3.4,-8);hullShape.lineTo(3.5,2);hullShape.lineTo(2.6,7);hullShape.lineTo(0,11);hullShape.lineTo(-2.6,7);hullShape.lineTo(-3.5,2);hullShape.closePath();const hullGeo=new THREE.ExtrudeGeometry(hullShape,{depth:2.8,bevelEnabled:true,bevelThickness:.5,bevelSize:.4,bevelSegments:2});hullGeo.rotateX(-Math.PI/2);hullGeo.rotateY(Math.PI);const hull=new THREE.Mesh(hullGeo,new THREE.MeshStandardMaterial({color:0x263d49,metalness:.2,roughness:.55}));hull.position.y=2.2;boat.add(hull);box(5.8,.6,14,0xa8a79b,0,3,-.2,boat);box(4.4,3.3,5.8,0xe9e7df,0,5,-1.6,boat);box(4.5,.6,6,0xb34e35,0,7,-1.6,boat);box(3.6,1.55,.16,0x5596b0,0,5.6,1.4,boat);for(const side of [-1,1])box(.14,1.4,2.8,0x5d9eaf,side*2.23,5.5,-1.6,boat);box(1.3,2,1.5,0x344650,0,4.4,-7.8,boat);box(.17,7,.17,0x333c41,0,11,-2,boat);// Rekkverk, dekksutstyr og navigasjonslys på spillerens fartøy.
-const railMat=new THREE.MeshStandardMaterial({color:0xb7c5c6,metalness:.7,roughness:.3});
-for(const side of [-1,1]){
- for(let k=0;k<7;k++){
- const post=new THREE.Mesh(new THREE.CylinderGeometry(.065,.065,1.25,6),railMat);post.position.set(side*2.95,3.75,-6+k*2.25);boat.add(post);
- }
- const rail=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,14),railMat);rail.position.set(side*2.95,4.32,.5);boat.add(rail);
-}
-box(1.3,.65,1.5,0x9b8b65,-1.6,3.7,-5.3,boat);
-box(1.1,.8,1.3,0x6c787d,1.5,3.8,-5.4,boat);
-const bowLamp=new THREE.Mesh(new THREE.SphereGeometry(.18,8,6),new THREE.MeshBasicMaterial({color:0xf3f8e6}));bowLamp.position.set(0,4.3,9);boat.add(bowLamp);
-let navLight=new THREE.PointLight(0xffe8b0,8,40);navLight.position.set(0,8.4,2);boat.add(navLight);
-
-// Realistisk CC0 fiskebåt (3DAssets.dev). Den eksisterende båten er reserve ved nettverksfeil.
-// Modellen er 10,77 m lang, +Y opp og baugen peker mot +Z.
-(async function loadRealFishingBoat(){
- try{
-  const {GLTFLoader}=await import('https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/loaders/GLTFLoader.js');
-  const loader=new GLTFLoader();
-  loader.load('https://cdn.3dassets.dev/assets/18727/v1/model.glb',gltf=>{
-   const model=gltf.scene;
-   model.scale.setScalar(1.65);
-   model.position.set(0,1.45,0);
-   model.traverse(obj=>{if(obj.isMesh){obj.castShadow=true;obj.receiveShadow=true}});
-   // Bytt først når den nye modellen er ferdig lastet.
-   for(const child of [...boat.children])child.visible=false;
-   boat.add(model);
-   console.info('Varangerfjorden Simulator: realistisk fiskebåt lastet (CC0)');
-  },undefined,err=>console.warn('Fiskebåtmodell utilgjengelig; bruker reservebåt.',err));
- }catch(err){console.warn('GLTFLoader utilgjengelig; bruker reservebåt.',err)}
-})();
+// Viksund 35-inspirert kystfiskebåt, laget lokalt uten eksterne 3D-filer.
+// Lokal baug peker mot +Z. Modellens proporsjoner er kunstneriske.
+const boat=new THREE.Group();scene.add(boat);
+const paint=(color,metalness=0,roughness=.63)=>new THREE.MeshStandardMaterial({color,metalness,roughness,side:THREE.DoubleSide});
+const white=paint(0xe8e9e3),blue=paint(0x174967),dark=paint(0x172e3c),glass=paint(0x467e98,.2,.22),metal=paint(0xa9b5b8,.65,.3),wood=paint(0x8c7964);
+function vmesh(geo,mat,parent=boat){const m=new THREE.Mesh(geo,mat);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+function vbox(w,h,d,mat,x,y,z){const m=vmesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);return m}
+function vrod(ax,ay,az,bx,by,bz,r=.045,mat=metal){const a=new THREE.Vector3(ax,ay,az),b=new THREE.Vector3(bx,by,bz),d=b.clone().sub(a);const m=vmesh(new THREE.CylinderGeometry(r,r,d.length(),7),mat);m.position.copy(a.add(b).multiplyScalar(.5));m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return m}
+// Skrog med tverrsnitt, myk baug og smalere hekk; 35 fot ≈ 10,7 meter.
+const stations=[[-5.35,1.02],[-4.7,1.45],[-3.5,1.68],[-1.5,1.78],[1,1.75],[3.25,1.42],[4.65,.75],[5.35,.12]];
+const verts=[],idx=[];const levels=[[-1.3,.52],[-.55,.94],[.45,1],[1.15,.94]];
+for(const [z,w] of stations)for(const [y,f] of levels){verts.push(-w*f,y,z,w*f,y,z)}
+for(let i=0;i<stations.length-1;i++)for(let j=0;j<levels.length;j++)for(let side=0;side<2;side++){if(j<levels.length-1){let p=i*levels.length*2+j*2+side,q=p+2,r=p+levels.length*2,t=r+2;idx.push(p,r,q,q,r,t)}}
+for(let i=0;i<stations.length-1;i++){let p=i*levels.length*2,q=(i+1)*levels.length*2;idx.push(p,q,p+1,p+1,q,q+1);let t=p+(levels.length-1)*2,u=q+(levels.length-1)*2;idx.push(t,t+1,u,t+1,u+1,u)}
+const hullG=new THREE.BufferGeometry();hullG.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));hullG.setIndex(idx);hullG.computeVertexNormals();
+vmesh(hullG,white).position.y=2.25;
+const stripe=vbox(3.0,.18,7.8,blue,0,3.22,-.3);
+vbox(2.8,.18,7.1,wood,0,3.38,-.55);
+vbox(2.65,.3,3.25,white,0,3.65,-1.35);
+vbox(2.45,2.1,2.85,white,0,4.83,-1.2);
+vbox(2.65,.26,3.2,dark,0,6.02,-1.2);
+// Store mørkeblå frontruter og sidevinduer
+vbox(1.02,1.06,.09,glass,-.62,5.12,.28);vbox(1.02,1.06,.09,glass,.62,5.12,.28);
+for(const side of [-1,1]){vbox(.09,1.0,1.1,glass,side*1.27,5.12,-1.45);vbox(.1,.8,.8,glass,side*1.27,5.12,-2.52)}
+// Dekk, luke, arbeidsutstyr, vinsj og redningsflåte
+vbox(2.5,.16,2.9,wood,0,3.43,-3.85);
+vbox(1.3,.28,1.15,dark,0,3.65,-4.1);
+vbox(.95,.7,.65,metal,-.65,3.9,-3.1);
+vbox(.75,.65,.65,blue,.78,3.83,-3.5);
+vbox(1.3,.5,.85,white,0,3.8,2.4);
+const life=vmesh(new THREE.CylinderGeometry(.38,.38,1.2,12),paint(0xf17b24));life.rotation.z=Math.PI/2;life.position.set(0,6.5,-2.3);
+// Mast, radar og antenner
+vrod(0,6.12,-1.8,0,9.65,-1.8,.095,dark);
+vrod(-.95,7.7,-1.8,.95,7.7,-1.8,.055,metal);
+vbox(.95,.16,.45,white,0,8.05,-1.8);
+vrod(.7,6.2,-1.5,1.15,8.7,-1.5,.035,dark);
+for(const side of [-1,1]){for(let k=0;k<6;k++){let z=-4.9+k*1.75;let w=z>3.3?Math.max(.55,1.65-(z-3.3)*.45):1.68;vrod(side*w,3.4,z,side*w,4.12,z,.035)}vrod(side*1.68,4.12,-4.9,side*1.68,4.12,3.1,.04)}
+vrod(-1.55,4.08,3.1,0,4.15,4.95,.045);vrod(1.55,4.08,3.1,0,4.15,4.95,.045);
+const navR=vmesh(new THREE.SphereGeometry(.13,10,8),new THREE.MeshBasicMaterial({color:0xff3b27}));navR.position.set(-1.3,6.15,-.1);
+const navG=vmesh(new THREE.SphereGeometry(.13,10,8),new THREE.MeshBasicMaterial({color:0x36f07c}));navG.position.set(1.3,6.15,-.1);
+const navLight=new THREE.PointLight(0xffe8b0,2,25);navLight.position.set(0,9.7,-1.8);boat.add(navLight);
 const wake=[];const wakeMat=new THREE.MeshBasicMaterial({color:0xc9eff4,transparent:true,opacity:.36,depthWrite:false});for(let i=0;i<75;i++){let m=new THREE.Mesh(new THREE.PlaneGeometry(3,1.3),wakeMat.clone());m.rotation.x=-Math.PI/2;m.visible=false;scene.add(m);wake.push(m)}let wakeIndex=0,wakeTimer=0;
 const keys={};addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();keys[e.code]=true;if(e.code==='KeyC'&&!e.repeat)cycleCamera();if(e.code==='KeyR'&&!e.repeat)reset();if(e.code==='KeyF'&&!e.repeat)fishAction()});addEventListener('keyup',e=>keys[e.code]=false);for(const b of document.querySelectorAll('[data-key]')){const k=b.dataset.key;b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;b.setPointerCapture(e.pointerId)});for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>keys[k]=false)}
 let camMode=0,orbitAngle=0,orbitPitch=.32;const camNames=['Bak båten','Førerplass','Oversikt'];function cycleCamera(){camMode=(camMode+1)%3;document.querySelector('#camera').textContent=camNames[camMode]}document.querySelector('#camBtn').onclick=cycleCamera;let dragging=false,lastX=0,lastY=0;renderer.domElement.addEventListener('pointerdown',e=>{if(camMode===2){dragging=true;lastX=e.clientX;lastY=e.clientY}});addEventListener('pointerup',()=>dragging=false);addEventListener('pointermove',e=>{if(dragging){orbitAngle+=(e.clientX-lastX)*.006;orbitPitch=THREE.MathUtils.clamp(orbitPitch+(e.clientY-lastY)*.004,-.1,1.15);lastX=e.clientX;lastY=e.clientY}});
