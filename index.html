@@ -277,6 +277,54 @@ vbox(.95,.7,.65,metal,-.65,3.9,-3.1);
 vbox(.75,.65,.65,blue,.78,3.83,-3.5);
 vbox(1.3,.5,.85,white,0,3.8,2.4);
 const life=vmesh(new THREE.CylinderGeometry(.38,.38,1.2,12),paint(0xf17b24));life.rotation.z=Math.PI/2;life.position.set(0,6.5,-2.3);
+// Viksund 35: ekstra skrogdetaljer, fenderlist og arbeidsdekk.
+const rub=paint(0x243743,.15,.45),safety=paint(0xe7a044),rope=paint(0xc5b99a);
+for(const side of [-1,1]){
+  // Langsgående fenderlist følger skrogets spring i stedet for en firkantet stripe.
+  for(let i=0;i<stations.length-1;i++){
+    const [za,wa]=stations[i],[zb,wb]=stations[i+1];
+    vrod(side*wa*.96,3.37,za,side*wb*.96,3.37,zb,.085,rub);
+  }
+  // Rekkestøtter langs akterdekket og lave skansekledninger.
+  for(let i=0;i<5;i++){
+    const z=-4.7+i*.86;
+    vrod(side*1.55,3.53,z,side*1.55,4.15,z,.038,metal);
+  }
+  vrod(side*1.55,4.15,-4.7,side*1.55,4.15,-1.26,.045,metal);
+  // Runde fendere hengende utenpå skroget.
+  for(const z of [-3.9,-1.2,1.65]){
+    const f=vmesh(new THREE.CylinderGeometry(.19,.19,.8,10),rub);
+    f.position.set(side*1.78,2.95,z);
+    vrod(side*1.73,3.5,z,side*1.78,3.25,z,.018,rope);
+  }
+}
+// Styrehus: tydelig vindusramme, dør og vindusviskere.
+for(const x of [-.62,.62]){
+  vrod(x-.48,5.68,.35,x+.48,5.68,.35,.045,dark);
+  vrod(x-.48,4.58,.35,x+.48,4.58,.35,.045,dark);
+  vrod(x,4.66,.4,x+.36,5.12,.41,.025,dark);
+}
+for(const side of [-1,1]){
+  vbox(.035,1.65,.68,dark,side*1.335,4.76,-2.37);
+  const handle=vbox(.07,.06,.12,metal,side*1.38,4.78,-2.13);
+}
+// Anker og fortøyningspullerter på fordekket.
+for(const side of [-1,1]){
+  vbox(.18,.36,.18,metal,side*.75,3.75,3.45);
+  vrod(side*.95,3.92,3.45,side*.55,3.92,3.45,.07,dark);
+}
+vbox(.65,.23,.55,dark,0,3.69,4.15);
+// Tydeligere arbeidsområde med garnkasser og vinsjtrommel.
+for(const [x,z] of [[-.75,-4.15],[.65,-4.15]]){
+  const crate=vbox(.73,.45,.72,safety,x,3.78,z);
+  vbox(.76,.055,.76,dark,x,4.03,z);
+}
+const winch=vmesh(new THREE.CylinderGeometry(.31,.31,.85,14),metal);
+winch.rotation.z=Math.PI/2;winch.position.set(0,4.03,-3.18);
+for(const x of [-.48,.48])vbox(.12,.55,.6,dark,x,3.83,-3.18);
+// Redningsbøye på babord styrehusvegg.
+const buoy=vmesh(new THREE.TorusGeometry(.29,.085,8,18),paint(0xf46a38));
+buoy.rotation.y=Math.PI/2;buoy.position.set(-1.36,5.2,-.65);
 // Mast, radar og antenner
 vrod(0,6.12,-1.8,0,9.65,-1.8,.095,dark);
 vrod(-.95,7.7,-1.8,.95,7.7,-1.8,.055,metal);
